@@ -795,11 +795,8 @@ function detectRepo() {
 }
 
 function detectAdminMode() {
-  const params = new URLSearchParams(location.search);
-  if (params.has('admin')) {
-    STATE.isAdmin = true;
-    document.getElementById('admin-actions').classList.add('show');
-  }
+  STATE.isAdmin = true;
+  document.getElementById('admin-actions').classList.add('show');
 }
 
 function loadPat() {
