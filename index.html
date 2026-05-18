@@ -47,7 +47,7 @@
   }
 
   .logo-img {
-    height: 72px;
+    height: 40px;
     width: auto;
     display: block;
   }
@@ -78,17 +78,49 @@
     font-size: 11px;
   }
 
-  .admin-indicator {
-    background: var(--danger-soft);
-    color: var(--danger);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 11px;
+  .admin-actions {
     display: none;
+    align-items: center;
+    gap: 8px;
   }
 
-  .admin-indicator.show { display: inline-block; }
+  .admin-actions.show { display: flex; }
+
+  .admin-btn {
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .admin-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .admin-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .admin-btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #fff;
+  }
+
+  .admin-btn-icon {
+    padding: 6px 8px;
+  }
 
   /* === メインコンテンツ === */
   .container {
@@ -96,57 +128,6 @@
     margin: 0 auto;
     padding: 24px;
   }
-
-  /* === Admin Panel === */
-  .admin-panel {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 24px;
-    display: none;
-  }
-
-  .admin-panel.show { display: block; }
-
-  .admin-panel h3 {
-    font-size: 14px;
-    color: var(--text);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .admin-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .pat-input {
-    flex: 1;
-    min-width: 240px;
-    background: #fff;
-    border: 1px solid var(--border-strong);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-family: "SF Mono", Menlo, monospace;
-    font-size: 12px;
-    outline: none;
-  }
-
-  .pat-input:focus { border-color: var(--accent); }
-
-  .status-text {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 8px;
-  }
-
-  .status-text.error { color: var(--danger); }
-  .status-text.success { color: var(--success-text); }
 
   /* === タブ === */
   .section-tabs {
@@ -714,24 +695,15 @@
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
   <div class="topbar-right">
-    <span class="admin-indicator" id="admin-indicator">🔧 管理モード</span>
+    <div class="admin-actions" id="admin-actions">
+      <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
+      <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
+    </div>
     <span class="version-badge">v1.1.0</span>
   </div>
 </div>
 
 <div class="container">
-
-  <!-- Admin Panel -->
-  <div class="admin-panel" id="admin-panel">
-    <h3>🔐 GitHub認証</h3>
-    <div class="admin-row">
-      <input type="password" class="pat-input" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-      <button class="btn btn-primary" id="save-pat-btn">PATを保存</button>
-      <button class="btn" id="clear-pat-btn">クリア</button>
-      <button class="btn btn-primary" id="add-extension-btn" style="margin-left: auto;">+ 新しい拡張を追加</button>
-    </div>
-    <div class="status-text" id="pat-status"></div>
-  </div>
 
   <div class="section-tabs">
     <button class="section-tab active">拡張機能</button>
@@ -826,20 +798,14 @@ function detectAdminMode() {
   const params = new URLSearchParams(location.search);
   if (params.has('admin')) {
     STATE.isAdmin = true;
-    document.getElementById('admin-panel').classList.add('show');
-    document.getElementById('admin-indicator').classList.add('show');
+    document.getElementById('admin-actions').classList.add('show');
   }
 }
 
 function loadPat() {
   if (!STATE.isAdmin) return;
   const pat = localStorage.getItem(PAT_KEY);
-  if (pat) {
-    STATE.pat = pat;
-    document.getElementById('pat-input').value = pat;
-    document.getElementById('pat-status').textContent = '✓ PAT保存済み';
-    document.getElementById('pat-status').className = 'status-text success';
-  }
+  if (pat) STATE.pat = pat;
 }
 
 async function loadData() {
@@ -880,37 +846,59 @@ function bindEvents() {
 
   // Admin events
   if (STATE.isAdmin) {
-    document.getElementById('save-pat-btn').addEventListener('click', savePat);
-    document.getElementById('clear-pat-btn').addEventListener('click', clearPat);
+    document.getElementById('settings-btn').addEventListener('click', showSettings);
     document.getElementById('add-extension-btn').addEventListener('click', showAddExtension);
   }
+}
+
+// ===========================================
+// 設定モーダル(PAT管理)
+// ===========================================
+function showSettings() {
+  const hasPat = !!STATE.pat;
+  document.getElementById('modal-header-content').innerHTML = `
+    <h2>⚙️ 設定</h2>
+    <div class="modal-version">GitHub Personal Access Token を管理します</div>
+  `;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row">
+      <label class="form-label">GitHub Personal Access Token</label>
+      <input type="password" class="form-input" id="settings-pat" value="${esc(STATE.pat)}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="font-family: 'SF Mono', Menlo, monospace;">
+      <div class="form-hint">
+        ${hasPat ? '✓ 現在のPATが保存されています(端末内のみ)' : 'まだPATが保存されていません'}<br>
+        <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--accent);">github.com/settings/tokens</a> から発行(scope: repo)
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn btn-danger" onclick="clearPat()">クリア</button>
+    <button class="btn" onclick="closeModal()">キャンセル</button>
+    <button class="btn btn-primary" onclick="savePat()" style="flex: 1;">保存</button>
+  `;
+  openModal();
 }
 
 // ===========================================
 // PAT管理
 // ===========================================
 function savePat() {
-  const pat = document.getElementById('pat-input').value.trim();
+  const pat = document.getElementById('settings-pat').value.trim();
   if (!pat) {
-    setStatus('PATを入力してください', 'error');
+    alert('PATを入力してください');
     return;
   }
   STATE.pat = pat;
   localStorage.setItem(PAT_KEY, pat);
-  setStatus('✓ PATを保存しました(端末内のみ)', 'success');
+  closeModal();
+  alert('✓ PATを保存しました(端末内のみ)');
 }
 
 function clearPat() {
+  if (!confirm('保存済みのPATを削除しますか?')) return;
   STATE.pat = '';
   localStorage.removeItem(PAT_KEY);
-  document.getElementById('pat-input').value = '';
-  setStatus('PATをクリアしました', '');
-}
-
-function setStatus(msg, type) {
-  const el = document.getElementById('pat-status');
-  el.textContent = msg;
-  el.className = 'status-text' + (type ? ' ' + type : '');
+  closeModal();
+  alert('PATをクリアしました');
 }
 
 // ===========================================
