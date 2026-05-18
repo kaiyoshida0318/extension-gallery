@@ -17,8 +17,12 @@
     --accent: #7c5fd9;
     --accent-hover: #6749c9;
     --accent-soft: #f0ebff;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
     --warn-bg: #fff8e1;
     --warn-text: #8a6d00;
+    --success-bg: #d1fae5;
+    --success-text: #065f46;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,41 +39,26 @@
   /* === トップバー === */
   .topbar {
     border-bottom: 1px solid var(--border);
-    padding: 14px 24px;
+    padding: 12px 24px;
     display: flex;
     align-items: center;
     gap: 16px;
     background: #fff;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-
   .logo-img {
-    height: 40px;
+    height: 72px;
     width: auto;
     display: block;
   }
 
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--accent-soft);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
+  .logo-fallback {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
   }
 
-  .logo-text-1 { color: var(--text); }
-  .logo-text-2 { color: var(--accent); }
+  .logo-fallback span { color: var(--accent); }
 
   .topbar-right {
     margin-left: auto;
@@ -89,6 +78,18 @@
     font-size: 11px;
   }
 
+  .admin-indicator {
+    background: var(--danger-soft);
+    color: var(--danger);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11px;
+    display: none;
+  }
+
+  .admin-indicator.show { display: inline-block; }
+
   /* === メインコンテンツ === */
   .container {
     max-width: 1200px;
@@ -96,12 +97,64 @@
     padding: 24px;
   }
 
-  /* === タブ風セクション === */
+  /* === Admin Panel === */
+  .admin-panel {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  .admin-panel.show { display: block; }
+
+  .admin-panel h3 {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .admin-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .pat-input {
+    flex: 1;
+    min-width: 240px;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .pat-input:focus { border-color: var(--accent); }
+
+  .status-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .status-text.error { color: var(--danger); }
+  .status-text.success { color: var(--success-text); }
+
+  /* === タブ === */
   .section-tabs {
     display: flex;
     gap: 4px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 24px;
+    align-items: center;
   }
 
   .section-tab {
@@ -133,7 +186,7 @@
     align-self: center;
   }
 
-  /* === 検索バー === */
+  /* === 検索 === */
   .controls {
     display: flex;
     gap: 12px;
@@ -171,13 +224,8 @@
     transition: border-color 0.15s;
   }
 
-  .search-input:focus {
-    border-color: var(--accent);
-  }
-
-  .search-input::placeholder {
-    color: var(--text-faint);
-  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text-faint); }
 
   /* === タグフィルター === */
   .tag-filter {
@@ -199,10 +247,7 @@
     transition: all 0.15s;
   }
 
-  .tag-pill:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  .tag-pill:hover { border-color: var(--accent); color: var(--accent); }
 
   .tag-pill.active {
     background: var(--accent);
@@ -211,7 +256,7 @@
     font-weight: 600;
   }
 
-  /* === テーブル風カードリスト === */
+  /* === リスト === */
   .list {
     background: #fff;
     border: 1px solid var(--border);
@@ -221,7 +266,7 @@
 
   .list-header {
     display: grid;
-    grid-template-columns: 56px 1fr 100px 140px;
+    grid-template-columns: 56px 1fr 100px 200px;
     padding: 12px 16px;
     background: var(--bg-soft);
     border-bottom: 1px solid var(--border);
@@ -233,7 +278,7 @@
 
   .row {
     display: grid;
-    grid-template-columns: 56px 1fr 100px 140px;
+    grid-template-columns: 56px 1fr 100px 200px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
     align-items: center;
@@ -241,10 +286,7 @@
   }
 
   .row:last-child { border-bottom: none; }
-
-  .row:hover {
-    background: var(--bg-soft);
-  }
+  .row:hover { background: var(--bg-soft); }
 
   .row-icon {
     width: 40px;
@@ -264,10 +306,7 @@
     object-fit: cover;
   }
 
-  .row-main {
-    min-width: 0;
-    padding-right: 16px;
-  }
+  .row-main { min-width: 0; padding-right: 16px; }
 
   .row-name {
     font-size: 14px;
@@ -287,11 +326,7 @@
     -webkit-box-orient: vertical;
   }
 
-  .row-tags {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
+  .row-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 
   .tag {
     font-size: 10px;
@@ -302,26 +337,15 @@
     border-radius: 4px;
   }
 
-  .row-version {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .row-version-num {
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .row-date {
-    font-size: 11px;
-    color: var(--text-faint);
-    margin-top: 2px;
-  }
+  .row-version { font-size: 12px; color: var(--text-dim); }
+  .row-version-num { font-weight: 600; color: var(--text); }
+  .row-date { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
 
   .row-actions {
     display: flex;
     gap: 6px;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .btn {
@@ -338,12 +362,12 @@
     text-align: center;
     font-weight: 500;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
-  .btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
 
   .btn-primary {
     background: var(--accent);
@@ -355,6 +379,23 @@
     background: var(--accent-hover);
     border-color: var(--accent-hover);
     color: #fff;
+  }
+
+  .btn-danger {
+    background: #fff;
+    border-color: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .btn-danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+
+  .btn-icon {
+    padding: 7px 9px;
+    font-size: 13px;
   }
 
   /* === モーダル === */
@@ -370,17 +411,14 @@
     padding: 20px;
   }
 
-  .modal-backdrop.show {
-    display: flex;
-    animation: fadeIn 0.15s;
-  }
+  .modal-backdrop.show { display: flex; animation: fadeIn 0.15s; }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .modal {
     background: #fff;
     border-radius: 12px;
-    max-width: 540px;
+    max-width: 600px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
@@ -409,7 +447,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
   }
 
   .modal-close:hover {
@@ -429,9 +466,7 @@
     font-size: 12px;
   }
 
-  .modal-body {
-    padding: 20px 24px;
-  }
+  .modal-body { padding: 20px 24px; }
 
   .modal-desc {
     color: var(--text-dim);
@@ -440,14 +475,18 @@
     margin-bottom: 20px;
   }
 
-  .install-steps h3 {
-    font-size: 12px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+  .modal-section {
+    margin-bottom: 20px;
   }
 
+  .modal-section h3 {
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  /* インストール手順 */
   .step {
     display: flex;
     gap: 12px;
@@ -469,12 +508,7 @@
     font-size: 11px;
   }
 
-  .step-text {
-    color: var(--text);
-    font-size: 13px;
-    line-height: 1.6;
-    padding-top: 1px;
-  }
+  .step-text { color: var(--text); font-size: 13px; line-height: 1.6; padding-top: 1px; }
 
   .step-text code {
     background: var(--bg-soft);
@@ -486,6 +520,120 @@
     border: 1px solid var(--border);
   }
 
+  /* バージョン履歴 */
+  .version-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .version-row:last-child { border-bottom: none; }
+
+  .version-label {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+
+  .version-label.current {
+    background: var(--success-bg);
+    color: var(--success-text);
+  }
+
+  .version-date {
+    font-size: 12px;
+    color: var(--text-faint);
+    flex: 1;
+  }
+
+  .version-notes {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* フォーム */
+  .form-row {
+    margin-bottom: 14px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .form-label.required::after {
+    content: " *";
+    color: var(--danger);
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+  }
+
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
+  /* ドロップゾーン */
+  .dropzone {
+    border: 2px dashed var(--border-strong);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg-soft);
+  }
+
+  .dropzone:hover, .dropzone.drag {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .dropzone-icon { font-size: 28px; margin-bottom: 6px; }
+  .dropzone-text { font-size: 13px; color: var(--text-dim); }
+  .dropzone-text strong { color: var(--accent); }
+
+  .file-info {
+    font-size: 12px;
+    color: var(--success-text);
+    background: var(--success-bg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .file-info.show { display: block; }
+
   .modal-footer {
     padding: 16px 24px;
     border-top: 1px solid var(--border);
@@ -494,22 +642,55 @@
     background: var(--bg-soft);
   }
 
-  /* === 空状態 === */
+  /* 空状態 */
   .empty {
     text-align: center;
     padding: 60px 24px;
     color: var(--text-faint);
   }
 
-  .empty-icon {
-    font-size: 40px;
-    margin-bottom: 12px;
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* === 進捗オーバーレイ === */
+  .progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .progress-overlay.show { display: flex; }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--accent-soft);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-text {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .progress-sub {
+    font-size: 12px;
+    color: var(--text-dim);
   }
 
   /* === レスポンシブ === */
   @media (max-width: 720px) {
     .topbar { padding: 12px 16px; gap: 10px; }
-    .logo { font-size: 18px; }
     .container { padding: 16px; }
     .list-header { display: none; }
     .row {
@@ -531,17 +712,30 @@
 
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
-       onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo',innerHTML:'<span class=&quot;logo-icon&quot;>🧩</span><span><span class=&quot;logo-text-1&quot;>Extension</span> <span class=&quot;logo-text-2&quot;>Gallery</span></span>'}))">
+       onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
   <div class="topbar-right">
-    <span class="version-badge" id="version-badge">v1.0.0</span>
+    <span class="admin-indicator" id="admin-indicator">🔧 管理モード</span>
+    <span class="version-badge">v1.1.0</span>
   </div>
 </div>
 
 <div class="container">
 
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="admin-panel">
+    <h3>🔐 GitHub認証</h3>
+    <div class="admin-row">
+      <input type="password" class="pat-input" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <button class="btn btn-primary" id="save-pat-btn">PATを保存</button>
+      <button class="btn" id="clear-pat-btn">クリア</button>
+      <button class="btn btn-primary" id="add-extension-btn" style="margin-left: auto;">+ 新しい拡張を追加</button>
+    </div>
+    <div class="status-text" id="pat-status"></div>
+  </div>
+
   <div class="section-tabs">
     <button class="section-tab active">拡張機能</button>
-    <span class="count-badge" id="count-badge">登録: <span id="count-total">0</span>件</span>
+    <span class="count-badge">登録: <span id="count-total">0</span>件</span>
   </div>
 
   <div class="controls">
@@ -566,6 +760,7 @@
 
 </div>
 
+<!-- 共通モーダル -->
 <div class="modal-backdrop" id="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
@@ -577,144 +772,782 @@
   </div>
 </div>
 
+<!-- 進捗オーバーレイ -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="spinner"></div>
+  <div class="progress-text" id="progress-text">処理中...</div>
+  <div class="progress-sub" id="progress-sub"></div>
+</div>
+
 <script>
-  let DATA = null;
-  let ACTIVE_TAG = 'all';
-  let SEARCH = '';
+// ===========================================
+// グローバル状態
+// ===========================================
+const STATE = {
+  data: null,
+  activeTag: 'all',
+  search: '',
+  isAdmin: false,
+  pat: '',
+  repoOwner: '',
+  repoName: '',
+  branch: 'main'
+};
 
-  async function loadData() {
-    try {
-      const res = await fetch('extensions.json');
-      DATA = await res.json();
-      init();
-    } catch (e) {
-      document.getElementById('rows').innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">⚠️</div>
-          <p>extensions.json の読み込みに失敗しました</p>
-        </div>`;
-    }
+const PAT_KEY = 'ext_gallery_pat';
+
+// ===========================================
+// 初期化
+// ===========================================
+async function init() {
+  detectRepo();
+  detectAdminMode();
+  loadPat();
+  await loadData();
+  bindEvents();
+}
+
+function detectRepo() {
+  // GitHub Pagesのホスト名からowner/repo推定
+  // 形式: <owner>.github.io/<repo>/
+  const host = location.hostname;
+  const path = location.pathname.split('/').filter(Boolean);
+  const ownerMatch = host.match(/^([^.]+)\.github\.io$/);
+  if (ownerMatch) {
+    STATE.repoOwner = ownerMatch[1];
+    STATE.repoName = path[0] || 'extension-gallery';
+  } else {
+    STATE.repoOwner = 'kaiyoshida0318';
+    STATE.repoName = 'extension-gallery';
   }
+}
 
-  function init() {
-    document.getElementById('count-total').textContent = DATA.extensions.length;
+function detectAdminMode() {
+  const params = new URLSearchParams(location.search);
+  if (params.has('admin')) {
+    STATE.isAdmin = true;
+    document.getElementById('admin-panel').classList.add('show');
+    document.getElementById('admin-indicator').classList.add('show');
+  }
+}
 
-    const tagSet = new Set();
-    DATA.extensions.forEach(e => (e.tags || []).forEach(t => tagSet.add(t)));
-    const tagFilter = document.getElementById('tag-filter');
-    [...tagSet].sort().forEach(tag => {
-      const btn = document.createElement('button');
-      btn.className = 'tag-pill';
-      btn.dataset.tag = tag;
-      btn.textContent = tag;
-      tagFilter.appendChild(btn);
-    });
+function loadPat() {
+  if (!STATE.isAdmin) return;
+  const pat = localStorage.getItem(PAT_KEY);
+  if (pat) {
+    STATE.pat = pat;
+    document.getElementById('pat-input').value = pat;
+    document.getElementById('pat-status').textContent = '✓ PAT保存済み';
+    document.getElementById('pat-status').className = 'status-text success';
+  }
+}
 
-    tagFilter.addEventListener('click', e => {
-      if (!e.target.classList.contains('tag-pill')) return;
-      tagFilter.querySelectorAll('.tag-pill').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      ACTIVE_TAG = e.target.dataset.tag;
-      render();
-    });
-
-    document.getElementById('search').addEventListener('input', e => {
-      SEARCH = e.target.value.toLowerCase();
-      render();
-    });
-
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.getElementById('modal-backdrop').addEventListener('click', e => {
-      if (e.target.id === 'modal-backdrop') closeModal();
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeModal();
-    });
-
+async function loadData() {
+  try {
+    const res = await fetch('extensions.json?t=' + Date.now());
+    STATE.data = await res.json();
     render();
+  } catch (e) {
+    document.getElementById('rows').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">⚠️</div>
+        <p>extensions.json の読み込みに失敗しました</p>
+      </div>`;
+  }
+}
+
+function bindEvents() {
+  document.getElementById('search').addEventListener('input', e => {
+    STATE.search = e.target.value.toLowerCase();
+    render();
+  });
+
+  document.getElementById('tag-filter').addEventListener('click', e => {
+    if (!e.target.classList.contains('tag-pill')) return;
+    document.querySelectorAll('.tag-pill').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    STATE.activeTag = e.target.dataset.tag;
+    render();
+  });
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (e.target.id === 'modal-backdrop') closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Admin events
+  if (STATE.isAdmin) {
+    document.getElementById('save-pat-btn').addEventListener('click', savePat);
+    document.getElementById('clear-pat-btn').addEventListener('click', clearPat);
+    document.getElementById('add-extension-btn').addEventListener('click', showAddExtension);
+  }
+}
+
+// ===========================================
+// PAT管理
+// ===========================================
+function savePat() {
+  const pat = document.getElementById('pat-input').value.trim();
+  if (!pat) {
+    setStatus('PATを入力してください', 'error');
+    return;
+  }
+  STATE.pat = pat;
+  localStorage.setItem(PAT_KEY, pat);
+  setStatus('✓ PATを保存しました(端末内のみ)', 'success');
+}
+
+function clearPat() {
+  STATE.pat = '';
+  localStorage.removeItem(PAT_KEY);
+  document.getElementById('pat-input').value = '';
+  setStatus('PATをクリアしました', '');
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('pat-status');
+  el.textContent = msg;
+  el.className = 'status-text' + (type ? ' ' + type : '');
+}
+
+// ===========================================
+// GitHub API
+// ===========================================
+const GH = {
+  async getFile(path) {
+    const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}?ref=${STATE.branch}`, {
+      headers: this._headers()
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`getFile失敗: ${res.status}`);
+    return await res.json();
+  },
+
+  async putFile(path, content, message, sha) {
+    const body = { message, content, branch: STATE.branch };
+    if (sha) body.sha = sha;
+    const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}`, {
+      method: 'PUT',
+      headers: { ...this._headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(`putFile失敗: ${err.message || res.status}`);
+    }
+    return await res.json();
+  },
+
+  async deleteFile(path, message, sha) {
+    const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}`, {
+      method: 'DELETE',
+      headers: { ...this._headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, branch: STATE.branch, sha })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(`deleteFile失敗: ${err.message || res.status}`);
+    }
+    return await res.json();
+  },
+
+  _headers() {
+    return {
+      'Authorization': `token ${STATE.pat}`,
+      'Accept': 'application/vnd.github.v3+json'
+    };
+  }
+};
+
+// ===========================================
+// 描画
+// ===========================================
+function render() {
+  if (!STATE.data) return;
+  document.getElementById('count-total').textContent = STATE.data.extensions.length;
+  renderTagFilter();
+  renderList();
+}
+
+function renderTagFilter() {
+  const tagSet = new Set();
+  STATE.data.extensions.forEach(e => (e.tags || []).forEach(t => tagSet.add(t)));
+  const tagFilter = document.getElementById('tag-filter');
+  // 既存のpillを保持しつつ更新
+  const existingTags = new Set([...tagFilter.querySelectorAll('.tag-pill')].map(b => b.dataset.tag));
+  [...tagSet].sort().forEach(tag => {
+    if (existingTags.has(tag)) return;
+    const btn = document.createElement('button');
+    btn.className = 'tag-pill';
+    btn.dataset.tag = tag;
+    btn.textContent = tag;
+    tagFilter.appendChild(btn);
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('rows');
+  const filtered = STATE.data.extensions.filter(ext => {
+    const tagMatch = STATE.activeTag === 'all' || (ext.tags || []).includes(STATE.activeTag);
+    const searchMatch = !STATE.search ||
+      ext.name.toLowerCase().includes(STATE.search) ||
+      ext.description.toLowerCase().includes(STATE.search) ||
+      (ext.tags || []).some(t => t.toLowerCase().includes(STATE.search));
+    return tagMatch && searchMatch;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <p>該当する拡張機能がありません</p>
+      </div>`;
+    return;
   }
 
-  function render() {
-    const list = document.getElementById('rows');
-    const filtered = DATA.extensions.filter(ext => {
-      const tagMatch = ACTIVE_TAG === 'all' || (ext.tags || []).includes(ACTIVE_TAG);
-      const searchMatch = !SEARCH ||
-        ext.name.toLowerCase().includes(SEARCH) ||
-        ext.description.toLowerCase().includes(SEARCH) ||
-        (ext.tags || []).some(t => t.toLowerCase().includes(SEARCH));
-      return tagMatch && searchMatch;
-    });
+  list.innerHTML = filtered.map(ext => {
+    const cur = currentVersion(ext);
+    const adminButtons = STATE.isAdmin ? `
+      <button class="btn btn-icon" onclick="showEditExtension('${esc(ext.id)}')" title="編集">✏️</button>
+      <button class="btn btn-icon" onclick="showAddVersion('${esc(ext.id)}')" title="新バージョン">⬆️</button>
+      <button class="btn btn-icon btn-danger" onclick="confirmDelete('${esc(ext.id)}')" title="削除">🗑️</button>
+    ` : '';
 
-    if (filtered.length === 0) {
-      list.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">📭</div>
-          <p>該当する拡張機能がありません</p>
-        </div>`;
-      return;
-    }
-
-    list.innerHTML = filtered.map(ext => `
+    return `
       <div class="row">
         <div class="row-icon">
-          ${ext.icon ? `<img src="${escapeHtml(ext.icon)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
+          ${ext.icon ? `<img src="${esc(ext.icon)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
         </div>
         <div class="row-main">
-          <div class="row-name">${escapeHtml(ext.name)}</div>
-          <div class="row-desc">${escapeHtml(ext.description)}</div>
+          <div class="row-name">${esc(ext.name)}</div>
+          <div class="row-desc">${esc(ext.description)}</div>
           <div class="row-tags">
-            ${(ext.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+            ${(ext.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}
           </div>
         </div>
         <div class="row-version">
-          <div class="row-version-num">v${escapeHtml(ext.version)}</div>
-          <div class="row-date">${escapeHtml(ext.updated_at)}</div>
+          <div class="row-version-num">v${esc(cur.version)}</div>
+          <div class="row-date">${esc(cur.updated_at)}</div>
         </div>
         <div class="row-actions">
-          <button class="btn" onclick="showInstall('${escapeHtml(ext.id)}')">手順</button>
-          <a class="btn btn-primary" href="${escapeHtml(ext.zip)}" download>ダウンロード</a>
+          <button class="btn" onclick="showDetail('${esc(ext.id)}')">詳細</button>
+          <a class="btn btn-primary" href="${esc(cur.zip)}" download>DL</a>
+          ${adminButtons}
         </div>
       </div>
-    `).join('');
-  }
-
-  function showInstall(id) {
-    const ext = DATA.extensions.find(e => e.id === id);
-    if (!ext) return;
-    document.getElementById('modal-header-content').innerHTML = `
-      <h2>${escapeHtml(ext.name)}</h2>
-      <div class="modal-version">v${escapeHtml(ext.version)} · 最終更新 ${escapeHtml(ext.updated_at)}</div>
     `;
-    document.getElementById('modal-body').innerHTML = `
-      <p class="modal-desc">${escapeHtml(ext.long_description || ext.description)}</p>
-      <div class="install-steps">
-        <h3>インストール手順</h3>
-        <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>ボタンからZIPを取得</div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text">ZIPをダブルクリックして解凍</div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text">Chromeで <code>chrome://extensions</code> を開く</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text">右上の<strong>デベロッパーモード</strong>をONにする</div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-text"><strong>パッケージ化されていない拡張機能を読み込む</strong>から、解凍したフォルダを選択</div></div>
-        <div class="step"><div class="step-num">6</div><div class="step-text">ツールバーにアイコンが表示されれば完了</div></div>
+  }).join('');
+}
+
+function currentVersion(ext) {
+  const v = ext.versions.find(v => v.version === ext.current_version);
+  return v || ext.versions[0] || { version: '?', zip: '#', updated_at: '?' };
+}
+
+// ===========================================
+// 詳細モーダル
+// ===========================================
+function showDetail(id) {
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+  const cur = currentVersion(ext);
+
+  document.getElementById('modal-header-content').innerHTML = `
+    <h2>${esc(ext.name)}</h2>
+    <div class="modal-version">v${esc(cur.version)} · ${esc(cur.updated_at)}</div>
+  `;
+
+  const versionsHtml = ext.versions.map(v => `
+    <div class="version-row">
+      <span class="version-label ${v.version === ext.current_version ? 'current' : ''}">v${esc(v.version)}</span>
+      <div class="version-date">
+        ${esc(v.updated_at)}
+        ${v.notes ? `<div class="version-notes">${esc(v.notes)}</div>` : ''}
       </div>
-    `;
-    document.getElementById('modal-footer').innerHTML = `
-      <button class="btn" onclick="closeModal()">閉じる</button>
-      <a class="btn btn-primary" href="${escapeHtml(ext.zip)}" download style="flex: 1;">ダウンロード v${escapeHtml(ext.version)}</a>
-    `;
-    document.getElementById('modal-backdrop').classList.add('show');
+      <a class="btn" href="${esc(v.zip)}" download>DL</a>
+    </div>
+  `).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <p class="modal-desc">${esc(ext.long_description || ext.description)}</p>
+
+    <div class="modal-section">
+      <h3>📦 インストール手順</h3>
+      <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>からZIPを取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">ZIPをダブルクリックして解凍</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">Chromeで <code>chrome://extensions</code> を開く</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text">右上の<strong>デベロッパーモード</strong>をON</div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-text"><strong>パッケージ化されていない拡張機能を読み込む</strong>から、解凍したフォルダを選択</div></div>
+    </div>
+
+    <div class="modal-section">
+      <h3>📜 バージョン履歴</h3>
+      ${versionsHtml}
+    </div>
+  `;
+
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn" onclick="closeModal()">閉じる</button>
+    <a class="btn btn-primary" href="${esc(cur.zip)}" download style="flex: 1;">v${esc(cur.version)} をダウンロード</a>
+  `;
+
+  openModal();
+}
+
+// ===========================================
+// 追加/編集モーダル
+// ===========================================
+function showAddExtension() {
+  if (!requirePat()) return;
+  document.getElementById('modal-header-content').innerHTML = `
+    <h2>新しい拡張機能を追加</h2>
+    <div class="modal-version">ZIPファイルとメタ情報を登録します</div>
+  `;
+  document.getElementById('modal-body').innerHTML = buildForm({});
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn" onclick="closeModal()">キャンセル</button>
+    <button class="btn btn-primary" onclick="submitAdd()" style="flex: 1;">追加してpush</button>
+  `;
+  openModal();
+  bindFormEvents();
+}
+
+function showEditExtension(id) {
+  if (!requirePat()) return;
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+
+  document.getElementById('modal-header-content').innerHTML = `
+    <h2>編集: ${esc(ext.name)}</h2>
+    <div class="modal-version">メタ情報を変更します(ZIPは変更しません)</div>
+  `;
+  document.getElementById('modal-body').innerHTML = buildForm(ext, true);
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn" onclick="closeModal()">キャンセル</button>
+    <button class="btn btn-primary" onclick="submitEdit('${esc(id)}')" style="flex: 1;">保存してpush</button>
+  `;
+  openModal();
+  bindFormEvents();
+}
+
+function showAddVersion(id) {
+  if (!requirePat()) return;
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+
+  document.getElementById('modal-header-content').innerHTML = `
+    <h2>新バージョン追加: ${esc(ext.name)}</h2>
+    <div class="modal-version">現在: v${esc(ext.current_version)}</div>
+  `;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row">
+      <label class="form-label required">新バージョン番号</label>
+      <input type="text" class="form-input" id="f-version" placeholder="例: 1.4.0">
+    </div>
+    <div class="form-row">
+      <label class="form-label required">ZIPファイル</label>
+      <div class="dropzone" id="f-dropzone">
+        <div class="dropzone-icon">📦</div>
+        <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+        <input type="file" id="f-zip" accept=".zip" style="display:none">
+      </div>
+      <div class="file-info" id="f-fileinfo"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">変更内容(notes)</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="例: バグ修正、UI改善..."></textarea>
+    </div>
+  `;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn" onclick="closeModal()">キャンセル</button>
+    <button class="btn btn-primary" onclick="submitNewVersion('${esc(id)}')" style="flex: 1;">追加してpush</button>
+  `;
+  openModal();
+  bindFormEvents();
+}
+
+function buildForm(ext, isEdit) {
+  return `
+    <div class="form-row">
+      <label class="form-label required">ID(英数とハイフン)</label>
+      <input type="text" class="form-input" id="f-id" value="${esc(ext.id || '')}" placeholder="例: my-extension" ${isEdit ? 'disabled' : ''}>
+      <div class="form-hint">URLやファイル名に使われます。後から変更不可</div>
+    </div>
+    <div class="form-row">
+      <label class="form-label required">名称</label>
+      <input type="text" class="form-input" id="f-name" value="${esc(ext.name || '')}" placeholder="例: My Extension">
+    </div>
+    <div class="form-row">
+      <label class="form-label required">短い説明(1〜2行)</label>
+      <textarea class="form-textarea" id="f-desc">${esc(ext.description || '')}</textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">詳細説明</label>
+      <textarea class="form-textarea" id="f-longdesc">${esc(ext.long_description || '')}</textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">タグ(カンマ区切り)</label>
+      <input type="text" class="form-input" id="f-tags" value="${esc((ext.tags || []).join(', '))}" placeholder="例: 楽天, 自動化">
+    </div>
+    <div class="form-row">
+      <label class="form-label">権限の概要</label>
+      <input type="text" class="form-input" id="f-perms" value="${esc(ext.permissions_summary || '')}">
+    </div>
+    ${!isEdit ? `
+      <div class="form-row">
+        <label class="form-label required">バージョン</label>
+        <input type="text" class="form-input" id="f-version" value="1.0.0" placeholder="例: 1.0.0">
+      </div>
+      <div class="form-row">
+        <label class="form-label required">ZIPファイル</label>
+        <div class="dropzone" id="f-dropzone">
+          <div class="dropzone-icon">📦</div>
+          <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+          <input type="file" id="f-zip" accept=".zip" style="display:none">
+        </div>
+        <div class="file-info" id="f-fileinfo"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">アイコン画像(任意・PNG/SVG)</label>
+        <div class="dropzone" id="f-icondrop">
+          <div class="dropzone-icon">🎨</div>
+          <div class="dropzone-text">画像をドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+          <input type="file" id="f-icon" accept="image/*" style="display:none">
+        </div>
+        <div class="file-info" id="f-iconinfo"></div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function bindFormEvents() {
+  const dz = document.getElementById('f-dropzone');
+  const fi = document.getElementById('f-zip');
+  if (dz && fi) {
+    dz.addEventListener('click', () => fi.click());
+    fi.addEventListener('change', () => showFileInfo(fi, 'f-fileinfo'));
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('drag');
+      if (e.dataTransfer.files[0]) {
+        fi.files = e.dataTransfer.files;
+        showFileInfo(fi, 'f-fileinfo');
+      }
+    });
   }
 
-  function closeModal() {
-    document.getElementById('modal-backdrop').classList.remove('show');
+  const idz = document.getElementById('f-icondrop');
+  const ifi = document.getElementById('f-icon');
+  if (idz && ifi) {
+    idz.addEventListener('click', () => ifi.click());
+    ifi.addEventListener('change', () => showFileInfo(ifi, 'f-iconinfo'));
+    idz.addEventListener('dragover', e => { e.preventDefault(); idz.classList.add('drag'); });
+    idz.addEventListener('dragleave', () => idz.classList.remove('drag'));
+    idz.addEventListener('drop', e => {
+      e.preventDefault();
+      idz.classList.remove('drag');
+      if (e.dataTransfer.files[0]) {
+        ifi.files = e.dataTransfer.files;
+        showFileInfo(ifi, 'f-iconinfo');
+      }
+    });
+  }
+}
+
+function showFileInfo(input, infoId) {
+  const f = input.files[0];
+  if (!f) return;
+  const info = document.getElementById(infoId);
+  info.textContent = `✓ ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+  info.classList.add('show');
+}
+
+// ===========================================
+// 追加/編集の送信
+// ===========================================
+async function submitAdd() {
+  const data = readForm(false);
+  if (!data) return;
+
+  const zipFile = document.getElementById('f-zip').files[0];
+  if (!zipFile) {
+    alert('ZIPファイルを選択してください');
+    return;
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
+  const iconFile = document.getElementById('f-icon').files[0];
+
+  if (STATE.data.extensions.find(e => e.id === data.id)) {
+    alert(`ID "${data.id}" は既に存在します`);
+    return;
   }
 
-  loadData();
+  try {
+    showProgress('ファイルをアップロード中', `ZIP: ${zipFile.name}`);
+
+    // ZIP
+    const zipPath = `downloads/${data.id}-v${data.version}.zip`;
+    await uploadFile(zipPath, zipFile, `Add ${data.id} v${data.version}`);
+
+    // アイコン
+    let iconPath = '';
+    if (iconFile) {
+      const ext = iconFile.name.split('.').pop().toLowerCase();
+      iconPath = `assets/icons/${data.id}.${ext}`;
+      updateProgress('アイコンをアップロード中', iconFile.name);
+      await uploadFile(iconPath, iconFile, `Add icon for ${data.id}`);
+    }
+
+    // extensions.json更新
+    updateProgress('extensions.jsonを更新中', '');
+    const newExt = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      long_description: data.long_description,
+      tags: data.tags,
+      icon: iconPath,
+      author: 'Kai',
+      permissions_summary: data.permissions_summary,
+      current_version: data.version,
+      versions: [{
+        version: data.version,
+        zip: zipPath,
+        updated_at: today(),
+        notes: '初回追加'
+      }]
+    };
+    STATE.data.extensions.push(newExt);
+    await saveJson(`Add extension: ${data.id} v${data.version}`);
+
+    hideProgress();
+    closeModal();
+    alert('✓ 追加完了!サイトに反映されるまで数十秒かかります。');
+    setTimeout(() => location.reload(), 2000);
+  } catch (e) {
+    hideProgress();
+    alert('エラー: ' + e.message);
+  }
+}
+
+async function submitEdit(id) {
+  const data = readForm(true);
+  if (!data) return;
+
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+
+  try {
+    showProgress('メタ情報を更新中', '');
+    ext.name = data.name;
+    ext.description = data.description;
+    ext.long_description = data.long_description;
+    ext.tags = data.tags;
+    ext.permissions_summary = data.permissions_summary;
+    await saveJson(`Edit metadata: ${id}`);
+
+    hideProgress();
+    closeModal();
+    alert('✓ 更新完了!');
+    setTimeout(() => location.reload(), 1500);
+  } catch (e) {
+    hideProgress();
+    alert('エラー: ' + e.message);
+  }
+}
+
+async function submitNewVersion(id) {
+  const version = document.getElementById('f-version').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+  const zipFile = document.getElementById('f-zip').files[0];
+
+  if (!version) { alert('バージョン番号を入力してください'); return; }
+  if (!zipFile) { alert('ZIPファイルを選択してください'); return; }
+
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+
+  if (ext.versions.find(v => v.version === version)) {
+    alert(`v${version} は既に存在します`);
+    return;
+  }
+
+  try {
+    showProgress('新バージョンをアップロード中', `v${version}`);
+    const zipPath = `downloads/${id}-v${version}.zip`;
+    await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+
+    updateProgress('extensions.jsonを更新中', '');
+    ext.versions.unshift({
+      version,
+      zip: zipPath,
+      updated_at: today(),
+      notes
+    });
+    ext.current_version = version;
+    await saveJson(`Bump ${id} to v${version}`);
+
+    hideProgress();
+    closeModal();
+    alert(`✓ v${version} 追加完了!`);
+    setTimeout(() => location.reload(), 1500);
+  } catch (e) {
+    hideProgress();
+    alert('エラー: ' + e.message);
+  }
+}
+
+function readForm(isEdit) {
+  const id = (document.getElementById('f-id').value || '').trim();
+  const name = document.getElementById('f-name').value.trim();
+  const description = document.getElementById('f-desc').value.trim();
+  if (!id || !name || !description) {
+    alert('ID・名称・説明は必須です');
+    return null;
+  }
+  if (!/^[a-z0-9-]+$/.test(id)) {
+    alert('IDは英小文字・数字・ハイフンのみ');
+    return null;
+  }
+  const data = {
+    id, name, description,
+    long_description: document.getElementById('f-longdesc').value.trim(),
+    tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    permissions_summary: document.getElementById('f-perms').value.trim()
+  };
+  if (!isEdit) {
+    data.version = document.getElementById('f-version').value.trim();
+    if (!data.version) { alert('バージョン番号は必須'); return null; }
+  }
+  return data;
+}
+
+// ===========================================
+// 削除
+// ===========================================
+async function confirmDelete(id) {
+  if (!requirePat()) return;
+  const ext = STATE.data.extensions.find(e => e.id === id);
+  if (!ext) return;
+  if (!confirm(`「${ext.name}」を削除しますか?\nZIPファイル・アイコンも一緒に削除されます。`)) return;
+
+  try {
+    showProgress('削除中', ext.name);
+
+    // 全バージョンのZIPを削除
+    for (const v of ext.versions) {
+      try {
+        const file = await GH.getFile(v.zip);
+        if (file) {
+          updateProgress('ZIP削除中', v.zip);
+          await GH.deleteFile(v.zip, `Delete ${v.zip}`, file.sha);
+        }
+      } catch (e) { console.warn('ZIP削除失敗(続行):', e.message); }
+    }
+
+    // アイコン削除
+    if (ext.icon) {
+      try {
+        const file = await GH.getFile(ext.icon);
+        if (file) {
+          updateProgress('アイコン削除中', ext.icon);
+          await GH.deleteFile(ext.icon, `Delete ${ext.icon}`, file.sha);
+        }
+      } catch (e) { console.warn('アイコン削除失敗(続行):', e.message); }
+    }
+
+    // extensions.jsonから削除
+    updateProgress('extensions.json更新中', '');
+    STATE.data.extensions = STATE.data.extensions.filter(e => e.id !== id);
+    await saveJson(`Delete extension: ${id}`);
+
+    hideProgress();
+    alert('✓ 削除完了!');
+    setTimeout(() => location.reload(), 1500);
+  } catch (e) {
+    hideProgress();
+    alert('エラー: ' + e.message);
+  }
+}
+
+// ===========================================
+// GitHubへの保存
+// ===========================================
+async function uploadFile(path, file, message) {
+  const base64 = await fileToBase64(file);
+  const existing = await GH.getFile(path);
+  await GH.putFile(path, base64, message, existing ? existing.sha : null);
+}
+
+async function saveJson(message) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(STATE.data, null, 2) + '\n')));
+  const existing = await GH.getFile('extensions.json');
+  await GH.putFile('extensions.json', content, message, existing ? existing.sha : null);
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const result = r.result.split(',')[1];
+      resolve(result);
+    };
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ===========================================
+// ヘルパー
+// ===========================================
+function requirePat() {
+  if (!STATE.pat) {
+    alert('まずGitHub PATを入力して保存してください');
+    return false;
+  }
+  return true;
+}
+
+function openModal() {
+  document.getElementById('modal-backdrop').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('show');
+}
+
+function showProgress(text, sub) {
+  document.getElementById('progress-text').textContent = text;
+  document.getElementById('progress-sub').textContent = sub;
+  document.getElementById('progress-overlay').classList.add('show');
+}
+
+function updateProgress(text, sub) {
+  document.getElementById('progress-text').textContent = text;
+  document.getElementById('progress-sub').textContent = sub;
+}
+
+function hideProgress() {
+  document.getElementById('progress-overlay').classList.remove('show');
+}
+
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+init();
 </script>
 
 </body>
