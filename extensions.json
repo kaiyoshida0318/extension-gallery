@@ -6,30 +6,6 @@
   },
   "extensions": [
     {
-      "id": "rpp-downloader",
-      "name": "RMS一括ダウンローダー",
-      "description": "RPP広告レポートのCSVを期間指定で一括ダウンロード。複数店舗を順番に処理します。",
-      "long_description": "管理画面で日付範囲を指定すると、対象期間の全レポートを自動的に取得。手作業のクリックを大幅削減。",
-      "tags": [
-        "楽天RMS",
-        "RPP",
-        "レポート",
-        "自動化"
-      ],
-      "icon": "assets/icons/rpp-downloader.png",
-      "author": "Kai",
-      "permissions_summary": "楽天RMSドメインのみアクセス",
-      "current_version": "4.5.2",
-      "versions": [
-        {
-          "version": "4.5.2",
-          "zip": "downloads/rpp-downloader-v4.5.2.zip",
-          "updated_at": "2026-04-28",
-          "notes": ""
-        }
-      ]
-    },
-    {
       "id": "rakuten-image-dl",
       "name": "楽天商品画像 一括DL",
       "description": "楽天の商品ページから、商品画像ギャラリーの画像を一括でフォルダにダウンロードします。",
