@@ -6,30 +6,16 @@
   },
   "extensions": [
     {
-      "id": "rms-autofill",
-      "name": "RMS Login AutoFill",
-      "description": "楽天RMSのログイン画面で、ID/パスワードを自動入力します。複数アカウントの切り替えにも対応。",
-      "long_description": "毎日のRMSログイン作業を1クリックで完了。アカウント情報は端末内に暗号化保存され、外部送信されません。",
-      "tags": ["楽天RMS", "自動化", "ログイン"],
-      "icon": "assets/icons/rms-autofill.png",
-      "author": "Kai",
-      "permissions_summary": "楽天RMSドメインのみアクセス",
-      "current_version": "1.3.0",
-      "versions": [
-        {
-          "version": "1.3.0",
-          "zip": "downloads/rms-autofill-v1.3.0.zip",
-          "updated_at": "2026-04-28",
-          "notes": ""
-        }
-      ]
-    },
-    {
       "id": "rpp-downloader",
       "name": "RMS一括ダウンローダー",
       "description": "RPP広告レポートのCSVを期間指定で一括ダウンロード。複数店舗を順番に処理します。",
       "long_description": "管理画面で日付範囲を指定すると、対象期間の全レポートを自動的に取得。手作業のクリックを大幅削減。",
-      "tags": ["楽天RMS", "RPP", "レポート", "自動化"],
+      "tags": [
+        "楽天RMS",
+        "RPP",
+        "レポート",
+        "自動化"
+      ],
       "icon": "assets/icons/rpp-downloader.png",
       "author": "Kai",
       "permissions_summary": "楽天RMSドメインのみアクセス",
@@ -48,7 +34,12 @@
       "name": "楽天商品画像 一括DL",
       "description": "楽天の商品ページから、商品画像ギャラリーの画像を一括でフォルダにダウンロードします。",
       "long_description": "商品ページを開いて拡張アイコンをクリックするだけで、ギャラリー内の画像を全部まとめて保存。サムネではなく元サイズで取得します。自動取得が効かないときは「範囲を選んで取得」も使えます。",
-      "tags": ["楽天", "商品画像", "ダウンロード", "自動化"],
+      "tags": [
+        "楽天",
+        "商品画像",
+        "ダウンロード",
+        "自動化"
+      ],
       "icon": "assets/icons/rakuten-image-dl.png",
       "author": "Kai",
       "permissions_summary": "楽天商品ページ・画像ホストのみアクセス",
@@ -67,7 +58,11 @@
       "name": "Speed Access",
       "description": "新規タブを開くと、よく使うブックマークが一覧表示されます。個人用と社内共有用を切り替え可能。",
       "long_description": "Chrome起動直後に必要なリンクへ即アクセス。GitHubに共有データを保存することでチームでブックマークを共有できます。",
-      "tags": ["ブックマーク", "新規タブ", "生産性"],
+      "tags": [
+        "ブックマーク",
+        "新規タブ",
+        "生産性"
+      ],
       "icon": "assets/icons/speed-access.png",
       "author": "Kai",
       "permissions_summary": "新規タブ置き換え、GitHub API",
