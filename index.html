@@ -811,7 +811,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.2</span>
+  <span class="version-badge">v1.3.3</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1588,10 +1588,10 @@ async function submitAdd() {
       await saveJson(msg);
     }
 
-    // 反映待ち
+    // 反映待ち(extensions.jsonの中身で確認)
     if (added.length > 0) {
-      updateProgress('サイト反映を待機中(最大60秒)', 'GitHub Pagesのビルド完了を待っています');
-      await waitForReflection(added[0].versions[0].zip, 60);
+      const addedIds = added.map(e => e.id);
+      await waitForExtensionPublished(addedIds, 120);
     }
 
     updateProgress('完了 - サイトを再読込中...', '');
@@ -1601,7 +1601,8 @@ async function submitAdd() {
     }
     msg += '\n\nOKを押すとサイトを再読込します。';
     alert(msg);
-    location.reload();
+    // キャッシュバスター付きでリロード
+    location.href = location.pathname + '?_=' + Date.now();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1706,9 +1707,12 @@ async function submitEdit(id) {
     ext.permissions_summary = data.permissions_summary;
     await saveJson(`Edit metadata: ${id}`);
 
+    // 反映待ち(編集の場合は単純にビルド待ち、20秒程度)
+    await new Promise(r => setTimeout(r, 15000));
+
     updateProgress('完了 - サイトを再読込中...', '');
     alert('✓ 更新完了!\nOKを押すとサイトを再読込します。');
-    location.reload();
+    location.href = location.pathname + "?_=" + Date.now();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1746,9 +1750,12 @@ async function submitNewVersion(id) {
     ext.current_version = version;
     await saveJson(`Bump ${id} to v${version}`);
 
+    // 反映待ち
+    await waitForExtensionPublished([id], 120);
+
     updateProgress('完了 - サイトを再読込中...', `v${version}`);
     alert(`✓ v${version} 追加完了!\nOKを押すとサイトを再読込します。`);
-    location.reload();
+    location.href = location.pathname + "?_=" + Date.now();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1833,15 +1840,14 @@ async function deleteExtensions(ids) {
       : `Delete ${targets.length} extensions`;
     await saveJson(msg);
 
-    // サイトに反映されるまで待つ(代表的なZIPが404を返すまで)
-    if (checkUrls.length > 0) {
-      updateProgress('サイト反映を待機中(最大60秒)', 'GitHub Pagesのビルド完了を待っています');
-      await waitForDeletion(checkUrls[0], 60);
+    // 反映待ち(extensions.jsonから消えるのを確認)
+    if (ids.length > 0) {
+      await waitForExtensionRemoved(ids, 120);
     }
 
     updateProgress('完了 - サイトを再読込中...', '');
     alert(`✓ ${targets.length}件削除しました!\nOKを押すとサイトを再読込します。`);
-    location.reload();
+    location.href = location.pathname + '?_=' + Date.now();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1861,17 +1867,62 @@ async function saveJson(message) {
   await GH.putFileSafe('extensions.json', content, message);
 }
 
-// サイトにファイルが反映されるまでpollingで待機(GitHub Pagesのビルドは数秒〜数十秒)
+// extensions.jsonをサイト経由で取得(キャッシュバスター付き)
+async function fetchPublishedJson() {
+  try {
+    const res = await fetch('extensions.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+// 追加した拡張IDがpublicなextensions.jsonに含まれるまで待機
+async function waitForExtensionPublished(expectedIds, timeoutSec = 120) {
+  const start = Date.now();
+  const deadline = start + timeoutSec * 1000;
+  const idSet = new Set(expectedIds);
+  while (Date.now() < deadline) {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    updateProgress(`サイト反映を待機中... (${elapsed}秒経過)`, `${expectedIds.length}件の反映を待っています`);
+    const json = await fetchPublishedJson();
+    if (json && json.extensions) {
+      const found = json.extensions.filter(e => idSet.has(e.id)).length;
+      if (found === expectedIds.length) return true;
+    }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
+}
+
+// 削除した拡張IDがextensions.jsonから消えるまで待機
+async function waitForExtensionRemoved(removedIds, timeoutSec = 120) {
+  const start = Date.now();
+  const deadline = start + timeoutSec * 1000;
+  const idSet = new Set(removedIds);
+  while (Date.now() < deadline) {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    updateProgress(`サイト反映を待機中... (${elapsed}秒経過)`, `${removedIds.length}件の削除反映を待っています`);
+    const json = await fetchPublishedJson();
+    if (json && json.extensions) {
+      const stillPresent = json.extensions.filter(e => idSet.has(e.id)).length;
+      if (stillPresent === 0) return true;
+    }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
+}
+
+// 旧関数(後方互換用)
 async function waitForReflection(checkUrl, timeoutSec = 60) {
   const start = Date.now();
   const deadline = start + timeoutSec * 1000;
-  let attempt = 0;
   while (Date.now() < deadline) {
-    attempt++;
     const elapsed = Math.floor((Date.now() - start) / 1000);
-    updateProgress(`サイト反映を待機中... (${elapsed}秒経過)`, `${checkUrl} の到達を確認`);
+    updateProgress(`サイト反映を待機中... (${elapsed}秒経過)`, '');
     try {
-      const res = await fetch(checkUrl + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      const res = await fetch(checkUrl + '?_=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
       if (res.ok) return true;
     } catch (e) { /* 続行 */ }
     await new Promise(r => setTimeout(r, 3000));
@@ -1879,18 +1930,17 @@ async function waitForReflection(checkUrl, timeoutSec = 60) {
   return false;
 }
 
-// 削除が反映されるまで待機(URLが404を返すまで)
 async function waitForDeletion(checkUrl, timeoutSec = 60) {
   const start = Date.now();
   const deadline = start + timeoutSec * 1000;
   while (Date.now() < deadline) {
     const elapsed = Math.floor((Date.now() - start) / 1000);
-    updateProgress(`削除反映を待機中... (${elapsed}秒経過)`, `${checkUrl}`);
+    updateProgress(`削除反映を待機中... (${elapsed}秒経過)`, '');
     try {
-      const res = await fetch(checkUrl + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      const res = await fetch(checkUrl + '?_=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
       if (res.status === 404) return true;
     } catch (e) {
-      return true; // ネットワークエラーは消えたとみなす
+      return true;
     }
     await new Promise(r => setTimeout(r, 3000));
   }
