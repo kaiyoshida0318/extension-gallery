@@ -4,5 +4,82 @@
     "subtitle": "社内向け Chrome 拡張機能アーカイブ",
     "owner": "Kai Yoshida"
   },
-  "extensions": []
+  "extensions": [
+    {
+      "id": "rpp-downloader",
+      "name": "RMS一括ダウンローダー",
+      "description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
+      "long_description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
+      "tags": [],
+      "icon": "assets/icons/rpp-downloader.png",
+      "author": "Kai",
+      "permissions_summary": "activeTab, scripting, tabs",
+      "current_version": "4.5.2",
+      "versions": [
+        {
+          "version": "4.5.2",
+          "zip": "downloads/rpp-downloader-v4.5.2.zip",
+          "updated_at": "2026-05-19",
+          "notes": "初回追加"
+        }
+      ]
+    },
+    {
+      "id": "speed-access-extension",
+      "name": "Speed Access",
+      "description": "社内用のspeed dial。個人用と共有用のタブで素早くアクセス。",
+      "long_description": "社内用のspeed dial。個人用と共有用のタブで素早くアクセス。",
+      "tags": [],
+      "icon": "assets/icons/speed-access-extension.png",
+      "author": "Kai",
+      "permissions_summary": "storage, https://api.github.com/*",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/speed-access-extension-v1.0.0.zip",
+          "updated_at": "2026-05-19",
+          "notes": "初回追加"
+        }
+      ]
+    },
+    {
+      "id": "rakuten-image-dl",
+      "name": "楽天商品画像 一括ダウンローダー",
+      "description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
+      "long_description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
+      "tags": [],
+      "icon": "assets/icons/rakuten-image-dl.png",
+      "author": "Kai",
+      "permissions_summary": "activeTab, scripting, downloads",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/rakuten-image-dl-v1.0.0.zip",
+          "updated_at": "2026-05-19",
+          "notes": "初回追加"
+        }
+      ]
+    },
+    {
+      "id": "rms-autofill",
+      "name": "RMS Login AutoFill",
+      "description": "RMS(楽天)のログイン画面でR-login ID/パスワードを自動入力し、パスワード変更ログを記録します。",
+      "long_description": "RMS(楽天)のログイン画面でR-login ID/パスワードを自動入力し、パスワード変更ログを記録します。",
+      "tags": [],
+      "icon": "assets/icons/rms-autofill.png",
+      "author": "Kai",
+      "permissions_summary": "storage, https://glogin.rms.rakuten.co.jp/*",
+      "current_version": "2.1.2",
+      "versions": [
+        {
+          "version": "2.1.2",
+          "zip": "downloads/rms-autofill-v2.1.2.zip",
+          "updated_at": "2026-05-19",
+          "notes": "初回追加"
+        }
+      ]
+    }
+  ]
 }
