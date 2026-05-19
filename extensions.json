@@ -4,5 +4,25 @@
     "subtitle": "社内向け Chrome 拡張機能アーカイブ",
     "owner": "Kai Yoshida"
   },
-  "extensions": []
+  "extensions": [
+    {
+      "id": "dl",
+      "name": "【拡張】楽天商品画像一括DL",
+      "description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
+      "long_description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
+      "tags": [],
+      "icon": "assets/icons/dl.png",
+      "author": "Kai",
+      "permissions_summary": "activeTab, scripting, downloads",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/dl-v1.0.0.zip",
+          "updated_at": "2026-05-19",
+          "notes": "初回追加"
+        }
+      ]
+    }
+  ]
 }
