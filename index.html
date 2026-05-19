@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#ffffff">
 <title>Extension Gallery</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     --bg: #ffffff;
@@ -699,7 +700,7 @@
       <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
       <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
     </div>
-    <span class="version-badge">v1.1.1</span>
+    <span class="version-badge">v1.2.0</span>
   </div>
 </div>
 
@@ -929,7 +930,7 @@ const GH = {
   },
 
   // SHA衝突したら自動でSHA取り直して再試行
-  async putFileSafe(path, content, message, maxRetry = 3) {
+  async putFileSafe(path, content, message, maxRetry = 2) {
     let lastError;
     for (let i = 0; i < maxRetry; i++) {
       try {
@@ -937,9 +938,9 @@ const GH = {
         return await this.putFile(path, content, message, existing ? existing.sha : null);
       } catch (e) {
         lastError = e;
-        // SHA不一致系のエラーなら再試行(409/422系)
-        if (/does not match|409|422|sha/i.test(e.message)) {
-          await new Promise(r => setTimeout(r, 500 * (i + 1)));
+        // SHA不一致のみリトライ
+        if (/does not match|409|422/i.test(e.message)) {
+          await new Promise(r => setTimeout(r, 300));
           continue;
         }
         throw e;
@@ -961,18 +962,19 @@ const GH = {
     return await res.json();
   },
 
-  // SHA衝突したら自動でSHA取り直して再試行
-  async deleteFileSafe(path, message, maxRetry = 3) {
+  // SHA衝突したら自動でSHA取り直して再試行(404は即スキップ)
+  async deleteFileSafe(path, message, maxRetry = 2) {
     let lastError;
     for (let i = 0; i < maxRetry; i++) {
       try {
         const existing = await this.getFile(path);
-        if (!existing) return null; // 既に存在しない
+        if (!existing) return null; // 存在しないので終了
         return await this.deleteFile(path, message, existing.sha);
       } catch (e) {
         lastError = e;
-        if (/does not match|409|422|sha/i.test(e.message)) {
-          await new Promise(r => setTimeout(r, 500 * (i + 1)));
+        // SHA不一致のみリトライ。404やネットワークエラーは即終了
+        if (/does not match|409|422/i.test(e.message)) {
+          await new Promise(r => setTimeout(r, 300));
           continue;
         }
         throw e;
@@ -1197,11 +1199,32 @@ function showAddVersion(id) {
 }
 
 function buildForm(ext, isEdit) {
+  if (!isEdit) {
+    // 追加モード: 最小フォーム
+    return `
+      <div class="form-row">
+        <label class="form-label required">名称</label>
+        <input type="text" class="form-input" id="f-name" placeholder="例: My Extension">
+      </div>
+      <div class="form-row">
+        <label class="form-label required">ZIPファイル</label>
+        <div class="dropzone" id="f-dropzone">
+          <div class="dropzone-icon">📦</div>
+          <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+          <input type="file" id="f-zip" accept=".zip" style="display:none">
+        </div>
+        <div class="file-info" id="f-fileinfo"></div>
+        <div class="form-hint">ZIP内の manifest.json から、バージョン・説明・アイコンを自動取得します</div>
+      </div>
+    `;
+  }
+
+  // 編集モード: 全フィールド表示
   return `
     <div class="form-row">
-      <label class="form-label required">ID(英数とハイフン)</label>
-      <input type="text" class="form-input" id="f-id" value="${esc(ext.id || '')}" placeholder="例: my-extension" ${isEdit ? 'disabled' : ''}>
-      <div class="form-hint">URLやファイル名に使われます。後から変更不可</div>
+      <label class="form-label">ID</label>
+      <input type="text" class="form-input" id="f-id" value="${esc(ext.id || '')}" disabled>
+      <div class="form-hint">変更不可</div>
     </div>
     <div class="form-row">
       <label class="form-label required">名称</label>
@@ -1223,30 +1246,6 @@ function buildForm(ext, isEdit) {
       <label class="form-label">権限の概要</label>
       <input type="text" class="form-input" id="f-perms" value="${esc(ext.permissions_summary || '')}">
     </div>
-    ${!isEdit ? `
-      <div class="form-row">
-        <label class="form-label required">バージョン</label>
-        <input type="text" class="form-input" id="f-version" value="1.0.0" placeholder="例: 1.0.0">
-      </div>
-      <div class="form-row">
-        <label class="form-label required">ZIPファイル</label>
-        <div class="dropzone" id="f-dropzone">
-          <div class="dropzone-icon">📦</div>
-          <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
-          <input type="file" id="f-zip" accept=".zip" style="display:none">
-        </div>
-        <div class="file-info" id="f-fileinfo"></div>
-      </div>
-      <div class="form-row">
-        <label class="form-label">アイコン画像(任意・PNG/SVG)</label>
-        <div class="dropzone" id="f-icondrop">
-          <div class="dropzone-icon">🎨</div>
-          <div class="dropzone-text">画像をドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
-          <input type="file" id="f-icon" accept="image/*" style="display:none">
-        </div>
-        <div class="file-info" id="f-iconinfo"></div>
-      </div>
-    ` : ''}
   `;
 }
 
@@ -1298,68 +1297,144 @@ function showFileInfo(input, infoId) {
 // 追加/編集の送信
 // ===========================================
 async function submitAdd() {
-  const data = readForm(false);
-  if (!data) return;
-
+  const name = (document.getElementById('f-name').value || '').trim();
   const zipFile = document.getElementById('f-zip').files[0];
-  if (!zipFile) {
-    alert('ZIPファイルを選択してください');
-    return;
-  }
 
-  const iconFile = document.getElementById('f-icon').files[0];
-
-  if (STATE.data.extensions.find(e => e.id === data.id)) {
-    alert(`ID "${data.id}" は既に存在します`);
-    return;
-  }
+  if (!name) { alert('名称を入力してください'); return; }
+  if (!zipFile) { alert('ZIPファイルを選択してください'); return; }
 
   try {
-    showProgress('ファイルをアップロード中', `ZIP: ${zipFile.name}`);
+    showProgress('ZIPを解析中', zipFile.name);
 
-    // ZIP
-    const zipPath = `downloads/${data.id}-v${data.version}.zip`;
-    await uploadFile(zipPath, zipFile, `Add ${data.id} v${data.version}`);
+    // ZIP内のmanifest.jsonとアイコンを抽出
+    const parsed = await parseExtensionZip(zipFile);
+    const version = parsed.version || '1.0.0';
+    const description = parsed.description || '(説明なし)';
+    const baseId = parsed.id || nameToId(name) || `ext-${Date.now()}`;
 
-    // アイコン
+    // ID衝突回避
+    let id = baseId;
+    let n = 2;
+    while (STATE.data.extensions.find(e => e.id === id)) {
+      id = `${baseId}-${n++}`;
+    }
+
+    // ZIPアップロード
+    updateProgress('ZIPアップロード中', `${id}-v${version}.zip`);
+    const zipPath = `downloads/${id}-v${version}.zip`;
+    await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+
+    // アイコンアップロード(ZIPから抽出できたら)
     let iconPath = '';
-    if (iconFile) {
-      const ext = iconFile.name.split('.').pop().toLowerCase();
-      iconPath = `assets/icons/${data.id}.${ext}`;
-      updateProgress('アイコンをアップロード中', iconFile.name);
-      await uploadFile(iconPath, iconFile, `Add icon for ${data.id}`);
+    if (parsed.iconBlob && parsed.iconExt) {
+      iconPath = `assets/icons/${id}.${parsed.iconExt}`;
+      updateProgress('アイコンアップロード中', iconPath);
+      const iconBase64 = await blobToBase64(parsed.iconBlob);
+      await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${id}`);
     }
 
     // extensions.json更新
-    updateProgress('extensions.jsonを更新中', '');
+    updateProgress('extensions.json更新中', '');
     const newExt = {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      long_description: data.long_description,
-      tags: data.tags,
+      id,
+      name,
+      description,
+      long_description: description,
+      tags: [],
       icon: iconPath,
       author: 'Kai',
-      permissions_summary: data.permissions_summary,
-      current_version: data.version,
+      permissions_summary: parsed.permissions_summary || '',
+      current_version: version,
       versions: [{
-        version: data.version,
+        version,
         zip: zipPath,
         updated_at: today(),
         notes: '初回追加'
       }]
     };
     STATE.data.extensions.push(newExt);
-    await saveJson(`Add extension: ${data.id} v${data.version}`);
+    await saveJson(`Add extension: ${id} v${version}`);
 
     hideProgress();
     closeModal();
-    alert('✓ 追加完了!サイトに反映されるまで数十秒かかります。');
-    setTimeout(() => location.reload(), 2000);
+    alert(`✓ 「${name}」 v${version} を追加しました!\nサイト反映まで数十秒かかります。`);
+    setTimeout(() => location.reload(), 1500);
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
   }
+}
+
+// 名称をIDに変換(例: "My Tool" → "my-tool")
+function nameToId(name) {
+  return name.toLowerCase()
+    .replace(/[^\w\s-]/g, '')  // 英数字・空白・ハイフン以外を除去
+    .replace(/\s+/g, '-')      // 空白→ハイフン
+    .replace(/-+/g, '-')       // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '')     // 前後のハイフン除去
+    .substring(0, 40);
+}
+
+// ZIPからmanifest.jsonとアイコンを抽出
+async function parseExtensionZip(zipFile) {
+  const result = { id: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '' };
+  try {
+    const zip = await JSZip.loadAsync(zipFile);
+
+    // manifest.jsonを探す(直下優先、サブフォルダも一応探す)
+    let manifestEntry = zip.file('manifest.json');
+    let manifestPrefix = '';
+    if (!manifestEntry) {
+      // サブフォルダ直下のmanifest.jsonを探す
+      const manifests = Object.keys(zip.files).filter(p => p.endsWith('/manifest.json') || p === 'manifest.json');
+      if (manifests.length > 0) {
+        manifestEntry = zip.file(manifests[0]);
+        manifestPrefix = manifests[0].replace(/manifest\.json$/, '');
+      }
+    }
+
+    if (manifestEntry) {
+      const manifestText = await manifestEntry.async('string');
+      const manifest = JSON.parse(manifestText);
+      result.version = manifest.version || '';
+      result.description = manifest.description || '';
+      if (manifest.short_name) result.id = nameToId(manifest.short_name);
+
+      // 権限の要約
+      if (manifest.permissions || manifest.host_permissions) {
+        const all = [...(manifest.permissions || []), ...(manifest.host_permissions || [])];
+        result.permissions_summary = all.slice(0, 3).join(', ');
+      }
+
+      // アイコン抽出(一番大きいサイズ)
+      if (manifest.icons) {
+        const sizes = Object.keys(manifest.icons).map(Number).sort((a, b) => b - a);
+        for (const size of sizes) {
+          const iconRelPath = manifest.icons[String(size)];
+          const iconFullPath = manifestPrefix + iconRelPath;
+          const iconEntry = zip.file(iconFullPath);
+          if (iconEntry) {
+            result.iconBlob = await iconEntry.async('blob');
+            const ext = iconRelPath.split('.').pop().toLowerCase();
+            result.iconExt = (ext === 'jpg' ? 'jpeg' : ext);
+            break;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('ZIP解析エラー(続行):', e.message);
+  }
+  return result;
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
 }
 
 async function submitEdit(id) {
@@ -1466,30 +1541,22 @@ async function confirmDelete(id) {
   try {
     showProgress('削除中', ext.name);
 
-    // 全バージョンのZIPを削除(失敗しても続行)
+    // ZIP・アイコンを並列削除(失敗しても続行)
+    const deletions = [];
     for (const v of ext.versions) {
-      try {
-        updateProgress('ZIP削除中', v.zip);
-        await GH.deleteFileSafe(v.zip, `Delete ${v.zip}`);
-      } catch (e) { console.warn('ZIP削除失敗(続行):', e.message); }
+      deletions.push(
+        GH.deleteFileSafe(v.zip, `Delete ${v.zip}`).catch(e => console.warn('ZIP削除失敗(続行):', v.zip, e.message))
+      );
     }
-
-    // アイコン削除
     if (ext.icon) {
-      try {
-        updateProgress('アイコン削除中', ext.icon);
-        await GH.deleteFileSafe(ext.icon, `Delete ${ext.icon}`);
-      } catch (e) { console.warn('アイコン削除失敗(続行):', e.message); }
+      deletions.push(
+        GH.deleteFileSafe(ext.icon, `Delete ${ext.icon}`).catch(e => console.warn('アイコン削除失敗(続行):', ext.icon, e.message))
+      );
     }
+    await Promise.all(deletions);
 
-    // extensions.jsonから削除
+    // extensions.json から削除
     updateProgress('extensions.json更新中', '');
-    // 最新データを取得し直してから削除する(他で変更された場合に備えて)
-    try {
-      const latest = await fetch('extensions.json?t=' + Date.now(), { cache: 'no-store' });
-      if (latest.ok) STATE.data = await latest.json();
-    } catch (e) { /* 取り直し失敗時は手元のデータで進める */ }
-
     STATE.data.extensions = STATE.data.extensions.filter(e => e.id !== id);
     await saveJson(`Delete extension: ${id}`);
 
