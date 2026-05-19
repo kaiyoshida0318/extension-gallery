@@ -308,6 +308,21 @@
     -webkit-box-orient: vertical;
   }
 
+  .row-id {
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  .row-id code {
+    font-family: "SF Mono", Menlo, monospace;
+    color: var(--text-dim);
+    background: var(--bg-soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
   .row-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 
   .tag {
@@ -709,7 +724,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.2.2</span>
+  <span class="version-badge">v1.2.4</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
@@ -1070,6 +1085,7 @@ function renderList() {
         <div class="row-main">
           <div class="row-name">${esc(ext.name)}</div>
           <div class="row-desc">${esc(ext.description)}</div>
+          <div class="row-id">ID: <code>${esc(ext.id)}</code></div>
           <div class="row-tags">
             ${(ext.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}
           </div>
@@ -1327,7 +1343,7 @@ async function submitAdd() {
     const parsed = await parseExtensionZip(zipFile);
     const version = parsed.version || '1.0.0';
     const description = parsed.description || '(説明なし)';
-    const baseId = parsed.id || nameToId(name) || `ext-${Date.now()}`;
+    const baseId = nameToId(name) || parsed.id || `ext-${Date.now()}`;
 
     // ID衝突回避
     let id = baseId;
@@ -1382,14 +1398,26 @@ async function submitAdd() {
   }
 }
 
-// 名称をIDに変換(例: "My Tool" → "my-tool")
+// 名称をIDに変換
+// 例: "RMS Login" → "rms-login"
+// 例: "楽天商品画像DL" → "dl-1779..." (英数残らない場合はタイムスタンプで補完)
 function nameToId(name) {
-  return name.toLowerCase()
-    .replace(/[^\w\s-]/g, '')  // 英数字・空白・ハイフン以外を除去
-    .replace(/\s+/g, '-')      // 空白→ハイフン
-    .replace(/-+/g, '-')       // 連続ハイフンを1つに
-    .replace(/^-|-$/g, '')     // 前後のハイフン除去
+  if (!name) return '';
+  // 英数字・空白・ハイフンだけを残す
+  let id = name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')   // 英数・空白・ハイフン以外を除去
+    .replace(/\s+/g, '-')           // 空白→ハイフン
+    .replace(/-+/g, '-')            // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '')          // 前後のハイフン除去
     .substring(0, 40);
+
+    // 英数が3文字未満ならフォールバック
+  if (id.length < 3) {
+    // 残ったものを前にしてタイムスタンプで補完
+    const ts = Date.now().toString(36).substring(0, 6);
+    id = id ? `${id}-${ts}` : `ext-${ts}`;
+  }
+  return id;
 }
 
 // ZIPからmanifest.jsonとアイコンを抽出
