@@ -811,7 +811,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.4</span>
+  <span class="version-badge">v1.3.5</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1368,10 +1368,6 @@ function showAddVersion(id) {
   `;
   document.getElementById('modal-body').innerHTML = `
     <div class="form-row">
-      <label class="form-label required">新バージョン番号</label>
-      <input type="text" class="form-input" id="f-version" placeholder="例: 1.4.0">
-    </div>
-    <div class="form-row">
       <label class="form-label required">ZIPファイル</label>
       <div class="dropzone" id="f-dropzone">
         <div class="dropzone-icon">📦</div>
@@ -1379,6 +1375,7 @@ function showAddVersion(id) {
         <input type="file" id="f-zip" accept=".zip" style="display:none">
       </div>
       <div class="file-info" id="f-fileinfo"></div>
+      <div class="form-hint">バージョン番号は ZIP内 manifest.json から自動取得されます</div>
     </div>
     <div class="form-row">
       <label class="form-label">変更内容(notes)</label>
@@ -1737,23 +1734,34 @@ async function submitEdit(id) {
 }
 
 async function submitNewVersion(id) {
-  const version = document.getElementById('f-version').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
   const zipFile = document.getElementById('f-zip').files[0];
 
-  if (!version) { alert('バージョン番号を入力してください'); return; }
   if (!zipFile) { alert('ZIPファイルを選択してください'); return; }
 
   const ext = STATE.data.extensions.find(e => e.id === id);
   if (!ext) return;
 
-  if (ext.versions.find(v => v.version === version)) {
-    alert(`v${version} は既に存在します`);
-    return;
-  }
-
   try {
-    showProgress('新バージョンをアップロード中', `v${version}`);
+    showProgress('ZIPを解析中', zipFile.name);
+
+    // ZIPからバージョン番号を抽出
+    const parsed = await parseExtensionZip(zipFile);
+    const version = parsed.version || '';
+    if (!version) {
+      hideProgress();
+      alert('ZIP内のmanifest.jsonからバージョン番号を取得できませんでした。\nmanifest.jsonに "version" フィールドがあるか確認してください。');
+      return;
+    }
+
+    // 既存バージョンチェック
+    if (ext.versions.find(v => v.version === version)) {
+      hideProgress();
+      alert(`v${version} は既に存在します。manifest.jsonのversionを更新してから再度アップロードしてください。`);
+      return;
+    }
+
+    updateProgress('新バージョンをアップロード中', `v${version}`);
     const zipPath = `downloads/${id}-v${version}.zip`;
     await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
 
