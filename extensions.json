@@ -6,6 +6,30 @@
   },
   "extensions": [
     {
+      "id": "rpp-downloader",
+      "name": "RMS一括ダウンローダー",
+      "description": "RPP広告レポートのCSVを期間指定で一括ダウンロード。複数店舗を順番に処理します。",
+      "long_description": "管理画面で日付範囲を指定すると、対象期間の全レポートを自動的に取得。手作業のクリックを大幅削減。",
+      "tags": [
+        "楽天RMS",
+        "RPP",
+        "レポート",
+        "自動化"
+      ],
+      "icon": "assets/icons/rpp-downloader.png",
+      "author": "Kai",
+      "permissions_summary": "楽天RMSドメインのみアクセス",
+      "current_version": "4.5.2",
+      "versions": [
+        {
+          "version": "4.5.2",
+          "zip": "downloads/rpp-downloader-v4.5.2.zip",
+          "updated_at": "2026-04-28",
+          "notes": ""
+        }
+      ]
+    },
+    {
       "id": "rakuten-image-dl",
       "name": "楽天商品画像 一括DL",
       "description": "楽天の商品ページから、商品画像ギャラリーの画像を一括でフォルダにダウンロードします。",
@@ -25,29 +49,6 @@
           "version": "1.0.0",
           "zip": "downloads/rakuten-image-dl-v1.0.0.zip",
           "updated_at": "2026-05-18",
-          "notes": ""
-        }
-      ]
-    },
-    {
-      "id": "speed-access",
-      "name": "Speed Access",
-      "description": "新規タブを開くと、よく使うブックマークが一覧表示されます。個人用と社内共有用を切り替え可能。",
-      "long_description": "Chrome起動直後に必要なリンクへ即アクセス。GitHubに共有データを保存することでチームでブックマークを共有できます。",
-      "tags": [
-        "ブックマーク",
-        "新規タブ",
-        "生産性"
-      ],
-      "icon": "assets/icons/speed-access.png",
-      "author": "Kai",
-      "permissions_summary": "新規タブ置き換え、GitHub API",
-      "current_version": "1.0.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "zip": "downloads/speed-access-extension-v1.0.0.zip",
-          "updated_at": "2026-05-14",
           "notes": ""
         }
       ]
