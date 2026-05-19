@@ -293,7 +293,7 @@
 
   .list-header {
     display: grid;
-    grid-template-columns: 56px 1fr 110px 260px;
+    grid-template-columns: 56px 1fr 110px 300px;
     gap: 16px;
     padding: 12px 16px;
     background: var(--bg-soft);
@@ -307,18 +307,19 @@
 
   .row {
     display: grid;
-    grid-template-columns: 56px 1fr 110px 260px;
+    grid-template-columns: 56px 1fr 110px 300px;
     gap: 16px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
     align-items: center;
     transition: background 0.15s, grid-template-columns 0.2s;
+    cursor: pointer;
   }
 
   /* 選択モード時は先頭にチェックボックス列を追加 */
   body.select-mode .list-header,
   body.select-mode .row {
-    grid-template-columns: 36px 56px 1fr 110px 260px;
+    grid-template-columns: 36px 56px 1fr 110px 300px;
   }
 
   .row:last-child { border-bottom: none; }
@@ -810,7 +811,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.1</span>
+  <span class="version-badge">v1.3.2</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1004,6 +1005,15 @@ function toggleSelect(id) {
   else STATE.selectedIds.add(id);
   updateBulkDeleteBtn();
   render();
+}
+
+// 行クリック: 選択モード中は選択切替、通常時は詳細モーダルを開く
+function onRowClick(id) {
+  if (STATE.selectMode) {
+    toggleSelect(id);
+  } else {
+    showDetail(id);
+  }
 }
 
 function updateBulkDeleteBtn() {
@@ -1220,13 +1230,13 @@ function renderList() {
     const cur = currentVersion(ext);
     const selected = STATE.selectedIds.has(ext.id);
     const adminButtons = STATE.isAdmin ? `
-      <button class="btn btn-icon" onclick="event.stopPropagation(); showEditExtension('${esc(ext.id)}')" title="編集">✏️</button>
-      <button class="btn btn-icon" onclick="event.stopPropagation(); showAddVersion('${esc(ext.id)}')" title="新バージョン">⬆️</button>
-      <button class="btn btn-icon btn-danger" onclick="event.stopPropagation(); confirmDelete('${esc(ext.id)}')" title="削除">🗑️</button>
+      <button class="btn" onclick="event.stopPropagation(); showEditExtension('${esc(ext.id)}')" title="編集">編集</button>
+      <button class="btn" onclick="event.stopPropagation(); showAddVersion('${esc(ext.id)}')" title="新バージョン">新バージョン</button>
+      <button class="btn btn-danger" onclick="event.stopPropagation(); confirmDelete('${esc(ext.id)}')" title="削除">削除</button>
     ` : '';
 
     return `
-      <div class="row${selected ? ' selected' : ''}" data-id="${esc(ext.id)}" onclick="toggleSelect('${esc(ext.id)}')">
+      <div class="row${selected ? ' selected' : ''}" data-id="${esc(ext.id)}" onclick="onRowClick('${esc(ext.id)}')">
         ${STATE.selectMode ? `
           <div class="row-checkbox">
             <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${esc(ext.id)}')">
@@ -1248,7 +1258,6 @@ function renderList() {
           <div class="row-date">${esc(cur.updated_at)}</div>
         </div>
         <div class="row-actions">
-          <button class="btn" onclick="event.stopPropagation(); showDetail('${esc(ext.id)}')">詳細</button>
           <a class="btn btn-primary" href="${esc(cur.zip)}" download onclick="event.stopPropagation()">DL</a>
           ${adminButtons}
         </div>
