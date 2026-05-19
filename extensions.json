@@ -6,25 +6,6 @@
   },
   "extensions": [
     {
-      "id": "rms",
-      "name": "【拡張】RMS自動ログイン",
-      "description": "RMS(楽天)のログイン画面でR-login ID/パスワードを自動入力し、パスワード変更ログを記録します。",
-      "long_description": "RMS(楽天)のログイン画面でR-login ID/パスワードを自動入力し、パスワード変更ログを記録します。",
-      "tags": [],
-      "icon": "assets/icons/rms.png",
-      "author": "Kai",
-      "permissions_summary": "storage, https://glogin.rms.rakuten.co.jp/*",
-      "current_version": "2.1.2",
-      "versions": [
-        {
-          "version": "2.1.2",
-          "zip": "downloads/rms-v2.1.2.zip",
-          "updated_at": "2026-05-19",
-          "notes": "初回追加"
-        }
-      ]
-    },
-    {
       "id": "rakuten-image-dl",
       "name": "rakuten-image-dl",
       "description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
