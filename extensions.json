@@ -4,30 +4,5 @@
     "subtitle": "社内向け Chrome 拡張機能アーカイブ",
     "owner": "Kai Yoshida"
   },
-  "extensions": [
-    {
-      "id": "rakuten-image-dl",
-      "name": "楽天商品画像 一括DL",
-      "description": "楽天の商品ページから、商品画像ギャラリーの画像を一括でフォルダにダウンロードします。",
-      "long_description": "商品ページを開いて拡張アイコンをクリックするだけで、ギャラリー内の画像を全部まとめて保存。サムネではなく元サイズで取得します。自動取得が効かないときは「範囲を選んで取得」も使えます。",
-      "tags": [
-        "楽天",
-        "商品画像",
-        "ダウンロード",
-        "自動化"
-      ],
-      "icon": "assets/icons/rakuten-image-dl.png",
-      "author": "Kai",
-      "permissions_summary": "楽天商品ページ・画像ホストのみアクセス",
-      "current_version": "1.0.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "zip": "downloads/rakuten-image-dl-v1.0.0.zip",
-          "updated_at": "2026-05-18",
-          "notes": ""
-        }
-      ]
-    }
-  ]
+  "extensions": []
 }
