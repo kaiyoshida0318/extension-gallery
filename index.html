@@ -699,7 +699,7 @@
       <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
       <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
     </div>
-    <span class="version-badge">v1.1.0</span>
+    <span class="version-badge">v1.1.1</span>
   </div>
 </div>
 
@@ -903,9 +903,9 @@ function clearPat() {
 // ===========================================
 const GH = {
   async getFile(path) {
-    // キャッシュ回避のため Cache-Control も指定
+    // キャッシュ回避はURLパラメータのみ(Cache-ControlヘッダはCORSで弾かれる)
     const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}?ref=${STATE.branch}&_=${Date.now()}`, {
-      headers: { ...this._headers(), 'Cache-Control': 'no-cache' },
+      headers: this._headers(),
       cache: 'no-store'
     });
     if (res.status === 404) return null;
