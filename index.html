@@ -811,7 +811,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.3</span>
+  <span class="version-badge">v1.3.4</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1527,12 +1527,15 @@ async function submitAdd() {
         // ZIP内のmanifest.jsonとアイコンを抽出
         const parsed = await parseExtensionZip(zipFile);
         const version = parsed.version || '1.0.0';
-        // 名称: manifestのname > ファイル名(拡張子なし)
+        // 名称(表示用): manifestのname > ファイル名(拡張子なし)
         const baseName = parsed.name || zipFile.name.replace(/\.zip$/i, '');
         const description = parsed.description || '(説明なし)';
-        const baseId = nameToId(baseName) || `ext-${Date.now()}-${i}`;
 
-        // ID衝突回避
+        // ID: ZIPファイル名(拡張子なし)を基本に、空白だけハイフンに置換
+        // 例: "My Tool.zip" → "My-Tool"
+        const baseId = filenameToId(zipFile.name);
+
+        // ID衝突回避(完全一致なら、末尾に番号を足していく)
         let id = baseId;
         let n = 2;
         while (STATE.data.extensions.find(e => e.id === id) || added.find(e => e.id === id)) {
@@ -1609,7 +1612,21 @@ async function submitAdd() {
   }
 }
 
-// 名称をIDに変換
+// ZIPファイル名からIDを生成(完全一致重視、空白だけハイフンに置換)
+// 例: "My Tool.zip" → "My-Tool"
+// 例: "RMS-Login-AutoFill-v1.3.0.zip" → "RMS-Login-AutoFill-v1.3.0"
+function filenameToId(filename) {
+  let id = filename
+    .replace(/\.zip$/i, '')         // .zip拡張子を除去
+    .replace(/[\s\u3000]+/g, '-')   // 半角・全角空白→ハイフン
+    .replace(/[\\\/]/g, '-')        // パス区切り文字も念のため置換
+    .replace(/-+/g, '-')            // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '');         // 前後のハイフン除去
+  if (!id) id = 'ext-' + Date.now().toString(36);
+  return id;
+}
+
+// 名称をIDに変換(古い処理。manifest.short_name用に残してある)
 // 例: "RMS Login" → "rms-login"
 // 例: "楽天商品画像DL" → "dl-1779..." (英数残らない場合はタイムスタンプで補完)
 function nameToId(name) {
