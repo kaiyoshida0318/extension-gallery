@@ -4,25 +4,5 @@
     "subtitle": "社内向け Chrome 拡張機能アーカイブ",
     "owner": "Kai Yoshida"
   },
-  "extensions": [
-    {
-      "id": "rakuten-image-dl",
-      "name": "rakuten-image-dl",
-      "description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
-      "long_description": "楽天の商品ページから全画像を一括でフォルダにダウンロードします。",
-      "tags": [],
-      "icon": "assets/icons/rakuten-image-dl.png",
-      "author": "Kai",
-      "permissions_summary": "activeTab, scripting, downloads",
-      "current_version": "1.0.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "zip": "downloads/rakuten-image-dl-v1.0.0.zip",
-          "updated_at": "2026-05-19",
-          "notes": "初回追加"
-        }
-      ]
-    }
-  ]
+  "extensions": []
 }
