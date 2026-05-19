@@ -23,25 +23,6 @@
           "notes": "初回追加"
         }
       ]
-    },
-    {
-      "id": "rppdown",
-      "name": "RPPdown",
-      "description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
-      "long_description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
-      "tags": [],
-      "icon": "assets/icons/rppdown.png",
-      "author": "Kai",
-      "permissions_summary": "activeTab, scripting, tabs",
-      "current_version": "4.5.2",
-      "versions": [
-        {
-          "version": "4.5.2",
-          "zip": "downloads/rppdown-v4.5.2.zip",
-          "updated_at": "2026-05-19",
-          "notes": "初回追加"
-        }
-      ]
     }
   ]
 }
