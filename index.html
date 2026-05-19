@@ -119,8 +119,57 @@
     color: #fff;
   }
 
+  .admin-btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+
+  .admin-btn-danger:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+    color: #fff;
+  }
+
   .admin-btn-icon {
     padding: 6px 8px;
+  }
+
+  .admin-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* === 選択モード時の行 === */
+  .row-checkbox {
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .row-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  body.select-mode .row-checkbox {
+    display: flex;
+  }
+
+  body.select-mode .row {
+    cursor: pointer;
+  }
+
+  body.select-mode .row.selected {
+    background: var(--accent-soft);
+  }
+
+  body.select-mode .row-actions {
+    opacity: 0.4;
+    pointer-events: none;
   }
 
   /* === メインコンテンツ === */
@@ -248,7 +297,7 @@
 
   .list-header {
     display: grid;
-    grid-template-columns: 56px 1fr 100px 200px;
+    grid-template-columns: 0 56px 1fr 100px 200px;
     padding: 12px 16px;
     background: var(--bg-soft);
     border-bottom: 1px solid var(--border);
@@ -256,15 +305,22 @@
     color: var(--text-faint);
     font-weight: 600;
     letter-spacing: 0.05em;
+    transition: grid-template-columns 0.2s;
   }
 
   .row {
     display: grid;
-    grid-template-columns: 56px 1fr 100px 200px;
+    grid-template-columns: 0 56px 1fr 100px 200px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
     align-items: center;
-    transition: background 0.15s;
+    transition: background 0.15s, grid-template-columns 0.2s;
+    overflow: hidden;
+  }
+
+  body.select-mode .list-header,
+  body.select-mode .row {
+    grid-template-columns: 40px 56px 1fr 100px 200px;
   }
 
   .row:last-child { border-bottom: none; }
@@ -631,6 +687,37 @@
 
   .file-info.show { display: block; }
 
+  .file-list {
+    margin-top: 10px;
+  }
+
+  .file-list-header {
+    font-size: 12px;
+    color: var(--success-text);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .file-list-item {
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--bg-soft);
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+
+  .file-list-size {
+    color: var(--text-faint);
+    font-size: 11px;
+  }
+
+  .dropzone-hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
   .modal-footer {
     padding: 16px 24px;
     border-top: 1px solid var(--border);
@@ -724,9 +811,11 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.2.4</span>
+  <span class="version-badge">v1.3.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
+      <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
+      <button class="admin-btn admin-btn-danger" id="bulk-delete-btn" style="display:none;">🗑️ <span id="bulk-delete-count">0</span>件削除</button>
       <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
       <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
     </div>
@@ -752,6 +841,7 @@
 
   <div class="list">
     <div class="list-header">
+      <div></div>
       <div></div>
       <div>名称 / 説明</div>
       <div>バージョン</div>
@@ -794,7 +884,9 @@ const STATE = {
   repoOwner: '',
   repoName: '',
   branch: 'main',
-  busy: false
+  busy: false,
+  selectMode: false,
+  selectedIds: new Set()
 };
 
 const PAT_KEY = 'ext_gallery_pat';
@@ -878,7 +970,52 @@ function bindEvents() {
   if (STATE.isAdmin) {
     document.getElementById('settings-btn').addEventListener('click', showSettings);
     document.getElementById('add-extension-btn').addEventListener('click', showAddExtension);
+    document.getElementById('select-mode-btn').addEventListener('click', toggleSelectMode);
+    document.getElementById('bulk-delete-btn').addEventListener('click', bulkDeleteSelected);
   }
+}
+
+// ===========================================
+// 選択モード
+// ===========================================
+function toggleSelectMode() {
+  STATE.selectMode = !STATE.selectMode;
+  document.body.classList.toggle('select-mode', STATE.selectMode);
+  document.getElementById('select-mode-btn').classList.toggle('active', STATE.selectMode);
+  document.getElementById('select-mode-btn').textContent = STATE.selectMode ? '✕ 選択解除' : '☑️ 選択';
+  if (!STATE.selectMode) STATE.selectedIds.clear();
+  updateBulkDeleteBtn();
+  render();
+}
+
+function toggleSelect(id) {
+  if (!STATE.selectMode) return;
+  if (STATE.selectedIds.has(id)) STATE.selectedIds.delete(id);
+  else STATE.selectedIds.add(id);
+  updateBulkDeleteBtn();
+  render();
+}
+
+function updateBulkDeleteBtn() {
+  const btn = document.getElementById('bulk-delete-btn');
+  const cnt = STATE.selectedIds.size;
+  if (cnt > 0 && STATE.selectMode) {
+    btn.style.display = 'inline-flex';
+    document.getElementById('bulk-delete-count').textContent = cnt;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function bulkDeleteSelected() {
+  const ids = Array.from(STATE.selectedIds);
+  if (ids.length === 0) return;
+  const names = ids.map(id => {
+    const ext = STATE.data.extensions.find(e => e.id === id);
+    return ext ? ext.name : id;
+  });
+  if (!confirm(`以下の${ids.length}件を削除しますか?\n\n${names.join('\n')}\n\nZIPファイル・アイコンも一緒に削除されます。`)) return;
+  await deleteExtensions(ids);
 }
 
 // ===========================================
@@ -1071,14 +1208,18 @@ function renderList() {
 
   list.innerHTML = filtered.map(ext => {
     const cur = currentVersion(ext);
+    const selected = STATE.selectedIds.has(ext.id);
     const adminButtons = STATE.isAdmin ? `
-      <button class="btn btn-icon" onclick="showEditExtension('${esc(ext.id)}')" title="編集">✏️</button>
-      <button class="btn btn-icon" onclick="showAddVersion('${esc(ext.id)}')" title="新バージョン">⬆️</button>
-      <button class="btn btn-icon btn-danger" onclick="confirmDelete('${esc(ext.id)}')" title="削除">🗑️</button>
+      <button class="btn btn-icon" onclick="event.stopPropagation(); showEditExtension('${esc(ext.id)}')" title="編集">✏️</button>
+      <button class="btn btn-icon" onclick="event.stopPropagation(); showAddVersion('${esc(ext.id)}')" title="新バージョン">⬆️</button>
+      <button class="btn btn-icon btn-danger" onclick="event.stopPropagation(); confirmDelete('${esc(ext.id)}')" title="削除">🗑️</button>
     ` : '';
 
     return `
-      <div class="row">
+      <div class="row${selected ? ' selected' : ''}" data-id="${esc(ext.id)}" onclick="toggleSelect('${esc(ext.id)}')">
+        <div class="row-checkbox">
+          <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${esc(ext.id)}')">
+        </div>
         <div class="row-icon">
           ${ext.icon ? `<img src="${esc(ext.icon)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
         </div>
@@ -1095,8 +1236,8 @@ function renderList() {
           <div class="row-date">${esc(cur.updated_at)}</div>
         </div>
         <div class="row-actions">
-          <button class="btn" onclick="showDetail('${esc(ext.id)}')">詳細</button>
-          <a class="btn btn-primary" href="${esc(cur.zip)}" download>DL</a>
+          <button class="btn" onclick="event.stopPropagation(); showDetail('${esc(ext.id)}')">詳細</button>
+          <a class="btn btn-primary" href="${esc(cur.zip)}" download onclick="event.stopPropagation()">DL</a>
           ${adminButtons}
         </div>
       </div>
@@ -1233,21 +1374,22 @@ function showAddVersion(id) {
 
 function buildForm(ext, isEdit) {
   if (!isEdit) {
-    // 追加モード: 最小フォーム
+    // 追加モード: 複数ZIP一括対応
     return `
       <div class="form-row">
-        <label class="form-label required">名称</label>
-        <input type="text" class="form-input" id="f-name" placeholder="例: My Extension">
-      </div>
-      <div class="form-row">
-        <label class="form-label required">ZIPファイル</label>
+        <label class="form-label required">ZIPファイル(複数選択可)</label>
         <div class="dropzone" id="f-dropzone">
           <div class="dropzone-icon">📦</div>
           <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
-          <input type="file" id="f-zip" accept=".zip" style="display:none">
+          <div class="dropzone-hint">複数ZIPを一度にドロップできます</div>
+          <input type="file" id="f-zip" accept=".zip" multiple style="display:none">
         </div>
-        <div class="file-info" id="f-fileinfo"></div>
-        <div class="form-hint">ZIP内の manifest.json から、バージョン・説明・アイコンを自動取得します</div>
+        <div class="file-list" id="f-filelist"></div>
+        <div class="form-hint">
+          名称はZIP内 manifest.json から自動取得、無ければファイル名をベースにします。<br>
+          バージョン・説明・アイコンも manifest.json から自動抽出。<br>
+          追加後、名称や説明は各カードの「✏️編集」から変更できます。
+        </div>
       </div>
     `;
   }
@@ -1287,15 +1429,15 @@ function bindFormEvents() {
   const fi = document.getElementById('f-zip');
   if (dz && fi) {
     dz.addEventListener('click', () => fi.click());
-    fi.addEventListener('change', () => showFileInfo(fi, 'f-fileinfo'));
+    fi.addEventListener('change', () => showFileList(fi));
     dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
     dz.addEventListener('drop', e => {
       e.preventDefault();
       dz.classList.remove('drag');
-      if (e.dataTransfer.files[0]) {
+      if (e.dataTransfer.files.length) {
         fi.files = e.dataTransfer.files;
-        showFileInfo(fi, 'f-fileinfo');
+        showFileList(fi);
       }
     });
   }
@@ -1326,71 +1468,118 @@ function showFileInfo(input, infoId) {
   info.classList.add('show');
 }
 
+function showFileList(input) {
+  const list = document.getElementById('f-filelist');
+  if (!list) return;
+  if (input.files.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  let html = `<div class="file-list-header">${input.files.length}個のファイル:</div>`;
+  for (const f of input.files) {
+    html += `<div class="file-list-item">✓ ${esc(f.name)} <span class="file-list-size">(${(f.size / 1024).toFixed(1)} KB)</span></div>`;
+  }
+  list.innerHTML = html;
+}
+
 // ===========================================
 // 追加/編集の送信
 // ===========================================
 async function submitAdd() {
-  const name = (document.getElementById('f-name').value || '').trim();
-  const zipFile = document.getElementById('f-zip').files[0];
+  const fileInput = document.getElementById('f-zip');
+  const files = Array.from(fileInput.files || []);
 
-  if (!name) { alert('名称を入力してください'); return; }
-  if (!zipFile) { alert('ZIPファイルを選択してください'); return; }
+  if (files.length === 0) { alert('ZIPファイルを選択してください'); return; }
 
   try {
-    showProgress('ZIPを解析中', zipFile.name);
+    showProgress(`${files.length}個のZIPを処理中`, '');
 
-    // ZIP内のmanifest.jsonとアイコンを抽出
-    const parsed = await parseExtensionZip(zipFile);
-    const version = parsed.version || '1.0.0';
-    const description = parsed.description || '(説明なし)';
-    const baseId = nameToId(name) || parsed.id || `ext-${Date.now()}`;
+    const added = [];
+    const failed = [];
 
-    // ID衝突回避
-    let id = baseId;
-    let n = 2;
-    while (STATE.data.extensions.find(e => e.id === id)) {
-      id = `${baseId}-${n++}`;
+    for (let i = 0; i < files.length; i++) {
+      const zipFile = files[i];
+      const prefix = `[${i + 1}/${files.length}] `;
+      try {
+        updateProgress(`${prefix}ZIPを解析中`, zipFile.name);
+
+        // ZIP内のmanifest.jsonとアイコンを抽出
+        const parsed = await parseExtensionZip(zipFile);
+        const version = parsed.version || '1.0.0';
+        // 名称: manifestのname > ファイル名(拡張子なし)
+        const baseName = parsed.name || zipFile.name.replace(/\.zip$/i, '');
+        const description = parsed.description || '(説明なし)';
+        const baseId = nameToId(baseName) || `ext-${Date.now()}-${i}`;
+
+        // ID衝突回避
+        let id = baseId;
+        let n = 2;
+        while (STATE.data.extensions.find(e => e.id === id) || added.find(e => e.id === id)) {
+          id = `${baseId}-${n++}`;
+        }
+
+        // ZIPアップロード
+        updateProgress(`${prefix}ZIPアップロード中`, `${id}-v${version}.zip`);
+        const zipPath = `downloads/${id}-v${version}.zip`;
+        await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+
+        // アイコンアップロード
+        let iconPath = '';
+        if (parsed.iconBlob && parsed.iconExt) {
+          iconPath = `assets/icons/${id}.${parsed.iconExt}`;
+          updateProgress(`${prefix}アイコンアップロード中`, iconPath);
+          const iconBase64 = await blobToBase64(parsed.iconBlob);
+          await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${id}`);
+        }
+
+        // 構造体を追加(jsonへの反映は最後に一括)
+        const newExt = {
+          id,
+          name: baseName,
+          description,
+          long_description: description,
+          tags: [],
+          icon: iconPath,
+          author: 'Kai',
+          permissions_summary: parsed.permissions_summary || '',
+          current_version: version,
+          versions: [{
+            version,
+            zip: zipPath,
+            updated_at: today(),
+            notes: '初回追加'
+          }]
+        };
+        added.push(newExt);
+      } catch (err) {
+        console.warn('ZIP処理失敗(続行):', zipFile.name, err.message);
+        failed.push({ file: zipFile.name, error: err.message });
+      }
     }
 
-    // ZIPアップロード
-    updateProgress('ZIPアップロード中', `${id}-v${version}.zip`);
-    const zipPath = `downloads/${id}-v${version}.zip`;
-    await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
-
-    // アイコンアップロード(ZIPから抽出できたら)
-    let iconPath = '';
-    if (parsed.iconBlob && parsed.iconExt) {
-      iconPath = `assets/icons/${id}.${parsed.iconExt}`;
-      updateProgress('アイコンアップロード中', iconPath);
-      const iconBase64 = await blobToBase64(parsed.iconBlob);
-      await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${id}`);
+    // extensions.jsonを一括更新
+    if (added.length > 0) {
+      updateProgress('extensions.jsonを更新中', `${added.length}件追加`);
+      for (const ext of added) STATE.data.extensions.push(ext);
+      const msg = added.length === 1
+        ? `Add extension: ${added[0].id} v${added[0].current_version}`
+        : `Add ${added.length} extensions`;
+      await saveJson(msg);
     }
 
-    // extensions.json更新
-    updateProgress('extensions.json更新中', '');
-    const newExt = {
-      id,
-      name,
-      description,
-      long_description: description,
-      tags: [],
-      icon: iconPath,
-      author: 'Kai',
-      permissions_summary: parsed.permissions_summary || '',
-      current_version: version,
-      versions: [{
-        version,
-        zip: zipPath,
-        updated_at: today(),
-        notes: '初回追加'
-      }]
-    };
-    STATE.data.extensions.push(newExt);
-    await saveJson(`Add extension: ${id} v${version}`);
+    // 反映待ち
+    if (added.length > 0) {
+      updateProgress('サイト反映を待機中(最大60秒)', 'GitHub Pagesのビルド完了を待っています');
+      await waitForReflection(added[0].versions[0].zip, 60);
+    }
 
-    // 完了表示はそのまま(busy維持)、リロードまで操作不可
-    updateProgress('完了 - サイトを再読込中...', `「${name}」 v${version}`);
-    alert(`✓ 「${name}」 v${version} を追加しました!\nOKを押すとサイトを再読込します。`);
+    updateProgress('完了 - サイトを再読込中...', '');
+    let msg = `✓ ${added.length}個の拡張機能を追加しました!`;
+    if (failed.length > 0) {
+      msg += `\n\n失敗 ${failed.length}件:\n` + failed.map(f => `- ${f.file}: ${f.error}`).join('\n');
+    }
+    msg += '\n\nOKを押すとサイトを再読込します。';
+    alert(msg);
     location.reload();
   } catch (e) {
     hideProgress();
@@ -1422,7 +1611,7 @@ function nameToId(name) {
 
 // ZIPからmanifest.jsonとアイコンを抽出
 async function parseExtensionZip(zipFile) {
-  const result = { id: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '' };
+  const result = { id: '', name: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '' };
   try {
     const zip = await JSZip.loadAsync(zipFile);
 
@@ -1430,7 +1619,6 @@ async function parseExtensionZip(zipFile) {
     let manifestEntry = zip.file('manifest.json');
     let manifestPrefix = '';
     if (!manifestEntry) {
-      // サブフォルダ直下のmanifest.jsonを探す
       const manifests = Object.keys(zip.files).filter(p => p.endsWith('/manifest.json') || p === 'manifest.json');
       if (manifests.length > 0) {
         manifestEntry = zip.file(manifests[0]);
@@ -1443,15 +1631,14 @@ async function parseExtensionZip(zipFile) {
       const manifest = JSON.parse(manifestText);
       result.version = manifest.version || '';
       result.description = manifest.description || '';
+      result.name = manifest.name || '';
       if (manifest.short_name) result.id = nameToId(manifest.short_name);
 
-      // 権限の要約
       if (manifest.permissions || manifest.host_permissions) {
         const all = [...(manifest.permissions || []), ...(manifest.host_permissions || [])];
         result.permissions_summary = all.slice(0, 3).join(', ');
       }
 
-      // アイコン抽出(一番大きいサイズ)
       if (manifest.icons) {
         const sizes = Object.keys(manifest.icons).map(Number).sort((a, b) => b - a);
         for (const size of sizes) {
@@ -1575,36 +1762,64 @@ function readForm(isEdit) {
 // ===========================================
 // 削除
 // ===========================================
+// 単発削除(従来のボタンから)
 async function confirmDelete(id) {
   if (!requirePat()) return;
   const ext = STATE.data.extensions.find(e => e.id === id);
   if (!ext) return;
   if (!confirm(`「${ext.name}」を削除しますか?\nZIPファイル・アイコンも一緒に削除されます。`)) return;
+  await deleteExtensions([id]);
+}
+
+// 複数削除(共通処理)
+async function deleteExtensions(ids) {
+  if (!requirePat()) return;
+  if (ids.length === 0) return;
 
   try {
-    showProgress('削除中', ext.name);
+    const targets = ids.map(id => STATE.data.extensions.find(e => e.id === id)).filter(Boolean);
+    if (targets.length === 0) return;
 
-    // ZIP・アイコンを並列削除(失敗しても続行)
+    showProgress(`${targets.length}件削除中`, targets.map(t => t.name).join(', '));
+
+    // 削除対象URL(後で「消えたか」を確認するため)
+    const checkUrls = [];
+
+    // ZIP・アイコンを全て並列削除
     const deletions = [];
-    for (const v of ext.versions) {
-      deletions.push(
-        GH.deleteFileSafe(v.zip, `Delete ${v.zip}`).catch(e => console.warn('ZIP削除失敗(続行):', v.zip, e.message))
-      );
+    for (const ext of targets) {
+      for (const v of ext.versions) {
+        deletions.push(
+          GH.deleteFileSafe(v.zip, `Delete ${v.zip}`).catch(e => console.warn('ZIP削除失敗(続行):', v.zip, e.message))
+        );
+        checkUrls.push(v.zip);
+      }
+      if (ext.icon) {
+        deletions.push(
+          GH.deleteFileSafe(ext.icon, `Delete ${ext.icon}`).catch(e => console.warn('アイコン削除失敗(続行):', ext.icon, e.message))
+        );
+      }
     }
-    if (ext.icon) {
-      deletions.push(
-        GH.deleteFileSafe(ext.icon, `Delete ${ext.icon}`).catch(e => console.warn('アイコン削除失敗(続行):', ext.icon, e.message))
-      );
-    }
+    updateProgress(`${targets.length}件のファイルを削除中`, '');
     await Promise.all(deletions);
 
     // extensions.json から削除
     updateProgress('extensions.json更新中', '');
-    STATE.data.extensions = STATE.data.extensions.filter(e => e.id !== id);
-    await saveJson(`Delete extension: ${id}`);
+    const idsSet = new Set(ids);
+    STATE.data.extensions = STATE.data.extensions.filter(e => !idsSet.has(e.id));
+    const msg = targets.length === 1
+      ? `Delete extension: ${targets[0].id}`
+      : `Delete ${targets.length} extensions`;
+    await saveJson(msg);
+
+    // サイトに反映されるまで待つ(代表的なZIPが404を返すまで)
+    if (checkUrls.length > 0) {
+      updateProgress('サイト反映を待機中(最大60秒)', 'GitHub Pagesのビルド完了を待っています');
+      await waitForDeletion(checkUrls[0], 60);
+    }
 
     updateProgress('完了 - サイトを再読込中...', '');
-    alert('✓ 削除完了!\nOKを押すとサイトを再読込します。');
+    alert(`✓ ${targets.length}件削除しました!\nOKを押すとサイトを再読込します。`);
     location.reload();
   } catch (e) {
     hideProgress();
@@ -1623,6 +1838,42 @@ async function uploadFile(path, file, message) {
 async function saveJson(message) {
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(STATE.data, null, 2) + '\n')));
   await GH.putFileSafe('extensions.json', content, message);
+}
+
+// サイトにファイルが反映されるまでpollingで待機(GitHub Pagesのビルドは数秒〜数十秒)
+async function waitForReflection(checkUrl, timeoutSec = 60) {
+  const start = Date.now();
+  const deadline = start + timeoutSec * 1000;
+  let attempt = 0;
+  while (Date.now() < deadline) {
+    attempt++;
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    updateProgress(`サイト反映を待機中... (${elapsed}秒経過)`, `${checkUrl} の到達を確認`);
+    try {
+      const res = await fetch(checkUrl + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      if (res.ok) return true;
+    } catch (e) { /* 続行 */ }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
+}
+
+// 削除が反映されるまで待機(URLが404を返すまで)
+async function waitForDeletion(checkUrl, timeoutSec = 60) {
+  const start = Date.now();
+  const deadline = start + timeoutSec * 1000;
+  while (Date.now() < deadline) {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    updateProgress(`削除反映を待機中... (${elapsed}秒経過)`, `${checkUrl}`);
+    try {
+      const res = await fetch(checkUrl + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      if (res.status === 404) return true;
+    } catch (e) {
+      return true; // ネットワークエラーは消えたとみなす
+    }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
 }
 
 function fileToBase64(file) {
