@@ -641,12 +641,26 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 200;
+    z-index: 999;
     flex-direction: column;
     gap: 16px;
+    cursor: wait;
+    user-select: none;
   }
 
   .progress-overlay.show { display: flex; }
+
+  /* オーバーレイ上に被さってる時のbody全体 */
+  body.busy {
+    cursor: wait;
+  }
+  body.busy * {
+    pointer-events: none !important;
+  }
+  body.busy .progress-overlay,
+  body.busy .progress-overlay * {
+    pointer-events: auto !important;
+  }
 
   .spinner {
     width: 48px;
@@ -695,12 +709,12 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
+  <span class="version-badge">v1.2.2</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
       <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
     </div>
-    <span class="version-badge">v1.2.0</span>
   </div>
 </div>
 
@@ -764,7 +778,8 @@ const STATE = {
   pat: '',
   repoOwner: '',
   repoName: '',
-  branch: 'main'
+  branch: 'main',
+  busy: false
 };
 
 const PAT_KEY = 'ext_gallery_pat';
@@ -836,9 +851,11 @@ function bindEvents() {
 
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (STATE.busy) return;
     if (e.target.id === 'modal-backdrop') closeModal();
   });
   document.addEventListener('keydown', e => {
+    if (STATE.busy) return;
     if (e.key === 'Escape') closeModal();
   });
 
@@ -1355,10 +1372,10 @@ async function submitAdd() {
     STATE.data.extensions.push(newExt);
     await saveJson(`Add extension: ${id} v${version}`);
 
-    hideProgress();
-    closeModal();
-    alert(`✓ 「${name}」 v${version} を追加しました!\nサイト反映まで数十秒かかります。`);
-    setTimeout(() => location.reload(), 1500);
+    // 完了表示はそのまま(busy維持)、リロードまで操作不可
+    updateProgress('完了 - サイトを再読込中...', `「${name}」 v${version}`);
+    alert(`✓ 「${name}」 v${version} を追加しました!\nOKを押すとサイトを再読込します。`);
+    location.reload();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1453,10 +1470,9 @@ async function submitEdit(id) {
     ext.permissions_summary = data.permissions_summary;
     await saveJson(`Edit metadata: ${id}`);
 
-    hideProgress();
-    closeModal();
-    alert('✓ 更新完了!');
-    setTimeout(() => location.reload(), 1500);
+    updateProgress('完了 - サイトを再読込中...', '');
+    alert('✓ 更新完了!\nOKを押すとサイトを再読込します。');
+    location.reload();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1494,10 +1510,9 @@ async function submitNewVersion(id) {
     ext.current_version = version;
     await saveJson(`Bump ${id} to v${version}`);
 
-    hideProgress();
-    closeModal();
-    alert(`✓ v${version} 追加完了!`);
-    setTimeout(() => location.reload(), 1500);
+    updateProgress('完了 - サイトを再読込中...', `v${version}`);
+    alert(`✓ v${version} 追加完了!\nOKを押すとサイトを再読込します。`);
+    location.reload();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1560,9 +1575,9 @@ async function confirmDelete(id) {
     STATE.data.extensions = STATE.data.extensions.filter(e => e.id !== id);
     await saveJson(`Delete extension: ${id}`);
 
-    hideProgress();
-    alert('✓ 削除完了!サイト反映まで数十秒かかります。');
-    setTimeout(() => location.reload(), 1500);
+    updateProgress('完了 - サイトを再読込中...', '');
+    alert('✓ 削除完了!\nOKを押すとサイトを再読込します。');
+    location.reload();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -1610,10 +1625,13 @@ function openModal() {
 }
 
 function closeModal() {
+  if (STATE.busy) return; // 処理中は閉じさせない
   document.getElementById('modal-backdrop').classList.remove('show');
 }
 
 function showProgress(text, sub) {
+  STATE.busy = true;
+  document.body.classList.add('busy');
   document.getElementById('progress-text').textContent = text;
   document.getElementById('progress-sub').textContent = sub;
   document.getElementById('progress-overlay').classList.add('show');
@@ -1625,6 +1643,8 @@ function updateProgress(text, sub) {
 }
 
 function hideProgress() {
+  STATE.busy = false;
+  document.body.classList.remove('busy');
   document.getElementById('progress-overlay').classList.remove('show');
 }
 
