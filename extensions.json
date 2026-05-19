@@ -61,25 +61,6 @@
           "notes": "初回追加"
         }
       ]
-    },
-    {
-      "id": "speed-access-extension",
-      "name": "Speed Access",
-      "description": "社内用のspeed dial。個人用と共有用のタブで素早くアクセス。",
-      "long_description": "社内用のspeed dial。個人用と共有用のタブで素早くアクセス。",
-      "tags": [],
-      "icon": "assets/icons/speed-access-extension.png",
-      "author": "Kai",
-      "permissions_summary": "storage, https://api.github.com/*",
-      "current_version": "1.0.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "zip": "downloads/speed-access-extension-v1.0.0.zip",
-          "updated_at": "2026-05-19",
-          "notes": "初回追加"
-        }
-      ]
     }
   ]
 }
