@@ -903,8 +903,10 @@ function clearPat() {
 // ===========================================
 const GH = {
   async getFile(path) {
-    const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}?ref=${STATE.branch}`, {
-      headers: this._headers()
+    // キャッシュ回避のため Cache-Control も指定
+    const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}?ref=${STATE.branch}&_=${Date.now()}`, {
+      headers: { ...this._headers(), 'Cache-Control': 'no-cache' },
+      cache: 'no-store'
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`getFile失敗: ${res.status}`);
@@ -926,6 +928,26 @@ const GH = {
     return await res.json();
   },
 
+  // SHA衝突したら自動でSHA取り直して再試行
+  async putFileSafe(path, content, message, maxRetry = 3) {
+    let lastError;
+    for (let i = 0; i < maxRetry; i++) {
+      try {
+        const existing = await this.getFile(path);
+        return await this.putFile(path, content, message, existing ? existing.sha : null);
+      } catch (e) {
+        lastError = e;
+        // SHA不一致系のエラーなら再試行(409/422系)
+        if (/does not match|409|422|sha/i.test(e.message)) {
+          await new Promise(r => setTimeout(r, 500 * (i + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastError;
+  },
+
   async deleteFile(path, message, sha) {
     const res = await fetch(`https://api.github.com/repos/${STATE.repoOwner}/${STATE.repoName}/contents/${path}`, {
       method: 'DELETE',
@@ -937,6 +959,26 @@ const GH = {
       throw new Error(`deleteFile失敗: ${err.message || res.status}`);
     }
     return await res.json();
+  },
+
+  // SHA衝突したら自動でSHA取り直して再試行
+  async deleteFileSafe(path, message, maxRetry = 3) {
+    let lastError;
+    for (let i = 0; i < maxRetry; i++) {
+      try {
+        const existing = await this.getFile(path);
+        if (!existing) return null; // 既に存在しない
+        return await this.deleteFile(path, message, existing.sha);
+      } catch (e) {
+        lastError = e;
+        if (/does not match|409|422|sha/i.test(e.message)) {
+          await new Promise(r => setTimeout(r, 500 * (i + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastError;
   },
 
   _headers() {
@@ -1424,35 +1466,35 @@ async function confirmDelete(id) {
   try {
     showProgress('削除中', ext.name);
 
-    // 全バージョンのZIPを削除
+    // 全バージョンのZIPを削除(失敗しても続行)
     for (const v of ext.versions) {
       try {
-        const file = await GH.getFile(v.zip);
-        if (file) {
-          updateProgress('ZIP削除中', v.zip);
-          await GH.deleteFile(v.zip, `Delete ${v.zip}`, file.sha);
-        }
+        updateProgress('ZIP削除中', v.zip);
+        await GH.deleteFileSafe(v.zip, `Delete ${v.zip}`);
       } catch (e) { console.warn('ZIP削除失敗(続行):', e.message); }
     }
 
     // アイコン削除
     if (ext.icon) {
       try {
-        const file = await GH.getFile(ext.icon);
-        if (file) {
-          updateProgress('アイコン削除中', ext.icon);
-          await GH.deleteFile(ext.icon, `Delete ${ext.icon}`, file.sha);
-        }
+        updateProgress('アイコン削除中', ext.icon);
+        await GH.deleteFileSafe(ext.icon, `Delete ${ext.icon}`);
       } catch (e) { console.warn('アイコン削除失敗(続行):', e.message); }
     }
 
     // extensions.jsonから削除
     updateProgress('extensions.json更新中', '');
+    // 最新データを取得し直してから削除する(他で変更された場合に備えて)
+    try {
+      const latest = await fetch('extensions.json?t=' + Date.now(), { cache: 'no-store' });
+      if (latest.ok) STATE.data = await latest.json();
+    } catch (e) { /* 取り直し失敗時は手元のデータで進める */ }
+
     STATE.data.extensions = STATE.data.extensions.filter(e => e.id !== id);
     await saveJson(`Delete extension: ${id}`);
 
     hideProgress();
-    alert('✓ 削除完了!');
+    alert('✓ 削除完了!サイト反映まで数十秒かかります。');
     setTimeout(() => location.reload(), 1500);
   } catch (e) {
     hideProgress();
@@ -1465,14 +1507,12 @@ async function confirmDelete(id) {
 // ===========================================
 async function uploadFile(path, file, message) {
   const base64 = await fileToBase64(file);
-  const existing = await GH.getFile(path);
-  await GH.putFile(path, base64, message, existing ? existing.sha : null);
+  await GH.putFileSafe(path, base64, message);
 }
 
 async function saveJson(message) {
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(STATE.data, null, 2) + '\n')));
-  const existing = await GH.getFile('extensions.json');
-  await GH.putFile('extensions.json', content, message, existing ? existing.sha : null);
+  await GH.putFileSafe('extensions.json', content, message);
 }
 
 function fileToBase64(file) {
