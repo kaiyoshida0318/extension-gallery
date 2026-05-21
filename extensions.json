@@ -86,6 +86,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "ne-quick-access",
+      "name": "NE Quick Access",
+      "description": "ネクストエンジンのオリジナルステータスと保存した検索をワンクリックで実行",
+      "long_description": "ネクストエンジンのオリジナルステータスと保存した検索をワンクリックで実行",
+      "tags": [],
+      "icon": "assets/icons/ne-quick-access.png",
+      "author": "Kai",
+      "permissions_summary": "storage, scripting, activeTab",
+      "current_version": "2.27.1",
+      "versions": [
+        {
+          "version": "2.27.1",
+          "zip": "downloads/ne-quick-access-v2.27.1.zip",
+          "updated_at": "2026-05-21",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
