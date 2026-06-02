@@ -671,6 +671,27 @@
     background: var(--accent-soft);
   }
 
+  /* ファイル選択済み状態 */
+  .dropzone.loaded {
+    border-color: var(--success-text);
+    background: var(--success-bg);
+    border-style: solid;
+  }
+
+  .dropzone.loaded .dropzone-icon {
+    color: var(--success-text);
+  }
+
+  .dropzone.loaded .dropzone-text {
+    color: var(--success-text);
+    font-weight: 600;
+  }
+
+  .dropzone.loaded .dropzone-hint {
+    color: var(--success-text);
+    opacity: 0.7;
+  }
+
   .dropzone-icon { font-size: 28px; margin-bottom: 6px; }
   .dropzone-text { font-size: 13px; color: var(--text-dim); }
   .dropzone-text strong { color: var(--accent); }
@@ -811,7 +832,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.5</span>
+  <span class="version-badge">v1.3.6</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1480,24 +1501,68 @@ function bindFormEvents() {
 
 function showFileInfo(input, infoId) {
   const f = input.files[0];
-  if (!f) return;
   const info = document.getElementById(infoId);
-  info.textContent = `✓ ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
-  info.classList.add('show');
+  // 親のドロップゾーンを探す(同じform-row内)
+  const dz = input.closest('.form-row')?.querySelector('.dropzone');
+  if (!f) {
+    if (info) info.classList.remove('show');
+    if (dz) {
+      dz.classList.remove('loaded');
+      resetDropzoneText(dz);
+    }
+    return;
+  }
+  if (info) {
+    info.textContent = `✓ ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+    info.classList.add('show');
+  }
+  if (dz) {
+    dz.classList.add('loaded');
+    const textEl = dz.querySelector('.dropzone-text');
+    const iconEl = dz.querySelector('.dropzone-icon');
+    if (iconEl) iconEl.textContent = '✓';
+    if (textEl) textEl.innerHTML = `<strong>${esc(f.name)}</strong><br><span style="font-weight:400;font-size:12px;">(${(f.size / 1024).toFixed(1)} KB) — クリックで変更</span>`;
+  }
 }
 
 function showFileList(input) {
   const list = document.getElementById('f-filelist');
-  if (!list) return;
+  const dz = input.closest('.form-row')?.querySelector('.dropzone');
   if (input.files.length === 0) {
-    list.innerHTML = '';
+    if (list) list.innerHTML = '';
+    if (dz) {
+      dz.classList.remove('loaded');
+      resetDropzoneText(dz);
+    }
     return;
   }
-  let html = `<div class="file-list-header">${input.files.length}個のファイル:</div>`;
-  for (const f of input.files) {
-    html += `<div class="file-list-item">✓ ${esc(f.name)} <span class="file-list-size">(${(f.size / 1024).toFixed(1)} KB)</span></div>`;
+  if (list) {
+    let html = `<div class="file-list-header">${input.files.length}個のファイル:</div>`;
+    for (const f of input.files) {
+      html += `<div class="file-list-item">✓ ${esc(f.name)} <span class="file-list-size">(${(f.size / 1024).toFixed(1)} KB)</span></div>`;
+    }
+    list.innerHTML = html;
   }
-  list.innerHTML = html;
+  if (dz) {
+    dz.classList.add('loaded');
+    const iconEl = dz.querySelector('.dropzone-icon');
+    const textEl = dz.querySelector('.dropzone-text');
+    if (iconEl) iconEl.textContent = '✓';
+    if (textEl) {
+      const n = input.files.length;
+      const firstName = input.files[0].name;
+      const extra = n > 1 ? ` ほか ${n - 1}件` : '';
+      textEl.innerHTML = `<strong>${esc(firstName)}${extra}</strong><br><span style="font-weight:400;font-size:12px;">クリックで変更</span>`;
+    }
+  }
+}
+
+// ドロップゾーンの表示を初期状態に戻す
+function resetDropzoneText(dz) {
+  const iconEl = dz.querySelector('.dropzone-icon');
+  const textEl = dz.querySelector('.dropzone-text');
+  if (iconEl) iconEl.textContent = '📦';
+  if (textEl) textEl.innerHTML = `ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong>`;
 }
 
 // ===========================================
@@ -1741,6 +1806,17 @@ async function submitNewVersion(id) {
 
   const ext = STATE.data.extensions.find(e => e.id === id);
   if (!ext) return;
+
+  // ファイル名(拡張子なし)が、この拡張のIDと一致するか確認
+  // 例: id = "RMS-Login", file = "RMS-Login.zip" or "RMS-Login-v1.4.zip" → OK
+  // 違う拡張のZIPを誤って入れてないかチェック
+  const fileBase = filenameToId(zipFile.name);
+  // 完全一致 OR 「id-」で始まる(idの後にバージョン等が続くケース)を許可
+  if (fileBase !== id && !fileBase.startsWith(id + '-')) {
+    if (!confirm(`⚠️ ファイル名と拡張IDが一致しません。\n\n拡張ID: ${id}\nファイル名: ${zipFile.name}\n\n別の拡張のZIPを誤ってアップロードしようとしている可能性があります。\nこのまま続けると、${id} のバージョンとして登録されます。\n\n本当に続行しますか?`)) {
+      return;
+    }
+  }
 
   try {
     showProgress('ZIPを解析中', zipFile.name);
