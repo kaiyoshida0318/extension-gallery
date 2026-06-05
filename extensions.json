@@ -190,6 +190,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "amzn-downloader",
+      "name": "Amazon広告 キャンペーン一括ダウンローダー",
+      "description": "Amazon広告コンソールのキャンペーンデータを日付範囲で1日ずつCSV一括ダウンロード",
+      "long_description": "Amazon広告コンソールのキャンペーンデータを日付範囲で1日ずつCSV一括ダウンロード",
+      "tags": [],
+      "icon": "assets/icons/amzn-downloader.png",
+      "author": "Kai",
+      "permissions_summary": "activeTab, scripting, tabs",
+      "current_version": "1.0.4",
+      "versions": [
+        {
+          "version": "1.0.4",
+          "zip": "downloads/amzn-downloader-v1.0.4.zip",
+          "updated_at": "2026-06-05",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
