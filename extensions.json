@@ -190,6 +190,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "chatgpt-auto",
+      "name": "ChatGPT 連続プロンプト送信",
+      "description": "前の生成が終わったタイミングで、指定した文章を指定回数だけ自動送信します。",
+      "long_description": "前の生成が終わったタイミングで、指定した文章を指定回数だけ自動送信します。",
+      "tags": [],
+      "icon": "",
+      "author": "Kai",
+      "permissions_summary": "storage, https://chatgpt.com/*, https://chat.openai.com/*",
+      "current_version": "1.0",
+      "versions": [
+        {
+          "version": "1.0",
+          "zip": "downloads/chatgpt-auto-v1.0.zip",
+          "updated_at": "2026-06-05",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
