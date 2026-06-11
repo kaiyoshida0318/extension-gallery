@@ -655,6 +655,36 @@
     margin-top: 4px;
   }
 
+  /* PAT入力欄(目玉ボタン付き) */
+  .pat-input-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .pat-input-field {
+    padding-right: 44px !important;
+    font-family: "SF Mono", Menlo, monospace !important;
+  }
+
+  .pat-toggle-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+
+  .pat-toggle-btn:hover {
+    background: var(--bg-soft);
+  }
+
   /* ドロップゾーン */
   .dropzone {
     border: 2px dashed var(--border-strong);
@@ -832,7 +862,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.6</span>
+  <span class="version-badge">v1.3.7</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1071,7 +1101,10 @@ function showSettings() {
   document.getElementById('modal-body').innerHTML = `
     <div class="form-row">
       <label class="form-label">GitHub Personal Access Token</label>
-      <input type="password" class="form-input" id="settings-pat" value="${esc(STATE.pat)}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="font-family: 'SF Mono', Menlo, monospace;">
+      <div class="pat-input-wrap">
+        <input type="password" class="form-input pat-input-field" id="settings-pat" value="${esc(STATE.pat)}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+        <button type="button" class="pat-toggle-btn" id="pat-toggle-btn" title="表示/非表示">👁️</button>
+      </div>
       <div class="form-hint">
         ${hasPat ? '✓ 現在のPATが保存されています(端末内のみ)' : 'まだPATが保存されていません'}<br>
         <a href="https://github.com/settings/tokens" target="_blank" style="color: var(--accent);">github.com/settings/tokens</a> から発行(scope: repo)
@@ -1084,6 +1117,22 @@ function showSettings() {
     <button class="btn btn-primary" onclick="savePat()" style="flex: 1;">保存</button>
   `;
   openModal();
+  // 表示切替バインド
+  document.getElementById('pat-toggle-btn').addEventListener('click', togglePatVisibility);
+}
+
+function togglePatVisibility() {
+  const input = document.getElementById('settings-pat');
+  const btn = document.getElementById('pat-toggle-btn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = '非表示にする';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+    btn.title = '表示する';
+  }
 }
 
 // ===========================================
