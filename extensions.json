@@ -209,6 +209,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "ne-shipping-monitor",
+      "name": "NE 出荷漏れ点検",
+      "description": "ネクストエンジンの印刷待ち・引当待ち・確認待ち・印刷済を、受注日別・配送方法別に点検するツール。ツールアイコンから測定。",
+      "long_description": "ネクストエンジンの印刷待ち・引当待ち・確認待ち・印刷済を、受注日別・配送方法別に点検するツール。ツールアイコンから測定。",
+      "tags": [],
+      "icon": "assets/icons/ne-shipping-monitor.png",
+      "author": "Kai",
+      "permissions_summary": "storage",
+      "current_version": "2.3.1",
+      "versions": [
+        {
+          "version": "2.3.1",
+          "zip": "downloads/ne-shipping-monitor-v2.3.1.zip",
+          "updated_at": "2026-06-15",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
