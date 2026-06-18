@@ -150,8 +150,14 @@
       "icon": "assets/icons/ne-quick-access.png",
       "author": "Kai",
       "permissions_summary": "storage, scripting, activeTab",
-      "current_version": "2.30.0",
+      "current_version": "2.32.0",
       "versions": [
+        {
+          "version": "2.32.0",
+          "zip": "downloads/ne-quick-access-v2.32.0.zip",
+          "updated_at": "2026-06-18",
+          "notes": ""
+        },
         {
           "version": "2.30.0",
           "zip": "downloads/ne-quick-access-v2.30.0.zip",
