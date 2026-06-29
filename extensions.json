@@ -14,8 +14,14 @@
       "icon": "assets/icons/rpp-downloader.png",
       "author": "Kai",
       "permissions_summary": "activeTab, scripting, tabs",
-      "current_version": "4.8.1",
+      "current_version": "5.7.1",
       "versions": [
+        {
+          "version": "5.7.1",
+          "zip": "downloads/rpp-downloader-v5.7.1.zip",
+          "updated_at": "2026-06-29",
+          "notes": ""
+        },
         {
           "version": "4.8.1",
           "zip": "downloads/rpp-downloader-v4.8.1.zip",
