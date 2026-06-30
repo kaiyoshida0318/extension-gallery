@@ -191,6 +191,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "rpp-downloader",
+      "name": "RMS一括ダウンローダー",
+      "description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
+      "long_description": "楽天RMSの各種レポート(RPP / 商品別売上など)を日付範囲で一括ダウンロード",
+      "tags": [],
+      "icon": "assets/icons/rpp-downloader.png",
+      "author": "Kai",
+      "permissions_summary": "activeTab, scripting, tabs",
+      "current_version": "5.9.0",
+      "versions": [
+        {
+          "version": "5.9.0",
+          "zip": "downloads/rpp-downloader-v5.9.0.zip",
+          "updated_at": "2026-06-30",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
