@@ -862,7 +862,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.7</span>
+  <span class="version-badge">v1.3.8</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1313,7 +1313,7 @@ function renderList() {
           </div>
         ` : ''}
         <div class="row-icon">
-          ${ext.icon ? `<img src="${esc(ext.icon)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
+          ${ext.icon ? `<img src="${esc(ext.icon)}?v=${esc(cur.version)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
         </div>
         <div class="row-main">
           <div class="row-name">${esc(ext.name)}</div>
@@ -1889,6 +1889,24 @@ async function submitNewVersion(id) {
     updateProgress('新バージョンをアップロード中', `v${version}`);
     const zipPath = `downloads/${id}-v${version}.zip`;
     await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+
+    // ZIPから新しいアイコンが取れていれば、それも上書きアップロード
+    let iconPath = ext.icon || '';
+    if (parsed.iconBlob && parsed.iconExt) {
+      const newIconPath = `assets/icons/${id}.${parsed.iconExt}`;
+      updateProgress('アイコンを更新中', newIconPath);
+      const iconBase64 = await blobToBase64(parsed.iconBlob);
+      await GH.putFileSafe(newIconPath, iconBase64, `Update icon for ${id} v${version}`);
+
+      // 旧アイコンが別拡張子だったら削除
+      if (ext.icon && ext.icon !== newIconPath) {
+        try {
+          await GH.deleteFileSafe(ext.icon, `Delete old icon for ${id}`);
+        } catch (e) { console.warn('旧アイコン削除失敗(続行):', e.message); }
+      }
+      iconPath = newIconPath;
+      ext.icon = newIconPath;
+    }
 
     updateProgress('extensions.jsonを更新中', '');
     ext.versions.unshift({
