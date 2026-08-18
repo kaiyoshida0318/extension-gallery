@@ -234,6 +234,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "YLogin",
+      "name": "YLogin",
+      "description": "Yahoo! JAPANの再認証画面で、YLogin Workerから確認コードを取得して入力します。送信は自動で行いません。",
+      "long_description": "Yahoo! JAPANの再認証画面で、YLogin Workerから確認コードを取得して入力します。送信は自動で行いません。",
+      "tags": [],
+      "icon": "assets/icons/YLogin.png",
+      "author": "Kai",
+      "permissions_summary": "storage, activeTab, scripting",
+      "current_version": "1.2.0",
+      "versions": [
+        {
+          "version": "1.2.0",
+          "zip": "downloads/YLogin-v1.2.0.zip",
+          "updated_at": "2026-08-18",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
