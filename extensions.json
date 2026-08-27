@@ -64,8 +64,14 @@
       "icon": "assets/icons/speed-access-extension.png",
       "author": "Kai",
       "permissions_summary": "storage, https://api.github.com/*",
-      "current_version": "1.7.1",
+      "current_version": "1.7.4",
       "versions": [
+        {
+          "version": "1.7.4",
+          "zip": "downloads/speed-access-extension-v1.7.4.zip",
+          "updated_at": "2026-08-27",
+          "notes": ""
+        },
         {
           "version": "1.7.1",
           "zip": "downloads/speed-access-extension-v1.7.1.zip",
