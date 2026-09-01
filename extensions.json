@@ -289,6 +289,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "ne-rakuten-sale-checker",
+      "name": "NE 楽天セール期間チェッカー",
+      "description": "ネクストエンジンの受注伝票から、その注文が楽天のセール期間中だったかを受注日時で判定します。",
+      "long_description": "ネクストエンジンの受注伝票から、その注文が楽天のセール期間中だったかを受注日時で判定します。",
+      "tags": [],
+      "icon": "assets/icons/ne-rakuten-sale-checker.png",
+      "author": "Kai",
+      "permissions_summary": "storage, https://main.next-engine.com/*",
+      "current_version": "2.0.0",
+      "versions": [
+        {
+          "version": "2.0.0",
+          "zip": "downloads/ne-rakuten-sale-checker-v2.0.0.zip",
+          "updated_at": "2026-09-01",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
