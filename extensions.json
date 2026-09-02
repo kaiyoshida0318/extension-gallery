@@ -14,8 +14,14 @@
       "icon": "assets/icons/rakuten-image-dl.png",
       "author": "Kai",
       "permissions_summary": "activeTab, scripting, downloads",
-      "current_version": "4.7.0",
+      "current_version": "1.1.0",
       "versions": [
+        {
+          "version": "1.1.0",
+          "zip": "downloads/rakuten-image-dl-v1.1.0.zip",
+          "updated_at": "2026-09-02",
+          "notes": ""
+        },
         {
           "version": "4.7.0",
           "zip": "downloads/rakuten-image-dl-v4.7.0.zip",
