@@ -14,8 +14,14 @@
       "icon": "assets/icons/rms-autofill.png",
       "author": "Kai",
       "permissions_summary": "storage, https://glogin.rms.rakuten.co.jp/*",
-      "current_version": "2.2.0",
+      "current_version": "2.3.0",
       "versions": [
+        {
+          "version": "2.3.0",
+          "zip": "downloads/rms-autofill-v2.3.0.zip",
+          "updated_at": "2026-09-07",
+          "notes": ""
+        },
         {
           "version": "2.2.0",
           "zip": "downloads/rms-autofill-v2.2.0.zip",
