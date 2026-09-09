@@ -308,6 +308,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "yahoo-downloader",
+      "name": "Yahoo一括ダウンローダー",
+      "description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
+      "long_description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
+      "tags": [],
+      "icon": "assets/icons/yahoo-downloader.png",
+      "author": "Kai",
+      "permissions_summary": "scripting, tabs, storage",
+      "current_version": "1.0.2",
+      "versions": [
+        {
+          "version": "1.0.2",
+          "zip": "downloads/yahoo-downloader-v1.0.2.zip",
+          "updated_at": "2026-09-09",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
