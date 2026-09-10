@@ -318,11 +318,11 @@
       "icon": "assets/icons/yahoo-downloader.png",
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
-      "current_version": "1.3.1",
+      "current_version": "1.4.0",
       "versions": [
         {
-          "version": "1.3.1",
-          "zip": "downloads/yahoo-downloader-v1.3.1.zip",
+          "version": "1.4.0",
+          "zip": "downloads/yahoo-downloader-v1.4.0.zip",
           "updated_at": "2026-09-10",
           "notes": ""
         },
