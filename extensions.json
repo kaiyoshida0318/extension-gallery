@@ -180,8 +180,14 @@
       "icon": "assets/icons/amzn-downloader.png",
       "author": "Kai",
       "permissions_summary": "activeTab, scripting, tabs",
-      "current_version": "1.0.4",
+      "current_version": "2.1.0",
       "versions": [
+        {
+          "version": "2.1.0",
+          "zip": "downloads/amzn-downloader-v2.1.0.zip",
+          "updated_at": "2026-09-15",
+          "notes": ""
+        },
         {
           "version": "1.0.4",
           "zip": "downloads/amzn-downloader-v1.0.4.zip",
