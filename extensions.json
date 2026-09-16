@@ -413,11 +413,17 @@
       "description": "(説明なし)",
       "long_description": "(説明なし)",
       "tags": [],
-      "icon": "",
+      "icon": "assets/icons/amazon-shipcount-ext.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "1.0.0",
+      "current_version": "1.3.1",
       "versions": [
+        {
+          "version": "1.3.1",
+          "zip": "downloads/amazon-shipcount-ext-v1.3.1.zip",
+          "updated_at": "2026-09-16",
+          "notes": ""
+        },
         {
           "version": "1.0.0",
           "zip": "downloads/amazon-shipcount-ext-v1.0.0.zip",
