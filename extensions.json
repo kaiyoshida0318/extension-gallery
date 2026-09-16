@@ -324,14 +324,8 @@
       "icon": "assets/icons/yahoo-downloader.png",
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
-      "current_version": "1.6.2",
+      "current_version": "1.6.1",
       "versions": [
-        {
-          "version": "1.6.2",
-          "zip": "downloads/yahoo-downloader-v1.6.2.zip",
-          "updated_at": "2026-09-16",
-          "notes": ""
-        },
         {
           "version": "1.6.1",
           "zip": "downloads/yahoo-downloader-v1.6.1.zip",
@@ -408,6 +402,25 @@
         {
           "version": "1.0.0",
           "zip": "downloads/amazon-monthly-downloader-v1.0.0.zip",
+          "updated_at": "2026-09-16",
+          "notes": "初回追加"
+        }
+      ]
+    },
+    {
+      "id": "amazon-shipcount-ext",
+      "name": "amazon-shipcount-ext",
+      "description": "(説明なし)",
+      "long_description": "(説明なし)",
+      "tags": [],
+      "icon": "",
+      "author": "Kai",
+      "permissions_summary": "",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/amazon-shipcount-ext-v1.0.0.zip",
           "updated_at": "2026-09-16",
           "notes": "初回追加"
         }
