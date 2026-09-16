@@ -387,6 +387,25 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "amazon-downloader",
+      "name": "amazon-downloader",
+      "description": "(説明なし)",
+      "long_description": "(説明なし)",
+      "tags": [],
+      "icon": "",
+      "author": "Kai",
+      "permissions_summary": "",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/amazon-downloader-v1.0.0.zip",
+          "updated_at": "2026-09-16",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
