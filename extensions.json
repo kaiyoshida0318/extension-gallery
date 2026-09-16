@@ -172,31 +172,6 @@
       ]
     },
     {
-      "id": "amzn-downloader",
-      "name": "Amazon広告 キャンペーン一括ダウンローダー",
-      "description": "Amazon広告コンソールのキャンペーンデータを日付範囲で1日ずつCSV一括ダウンロード",
-      "long_description": "Amazon広告コンソールのキャンペーンデータを日付範囲で1日ずつCSV一括ダウンロード",
-      "tags": [],
-      "icon": "assets/icons/amzn-downloader.png",
-      "author": "Kai",
-      "permissions_summary": "activeTab, scripting, tabs",
-      "current_version": "2.1.0",
-      "versions": [
-        {
-          "version": "2.1.0",
-          "zip": "downloads/amzn-downloader-v2.1.0.zip",
-          "updated_at": "2026-09-15",
-          "notes": ""
-        },
-        {
-          "version": "1.0.4",
-          "zip": "downloads/amzn-downloader-v1.0.4.zip",
-          "updated_at": "2026-06-05",
-          "notes": "初回追加"
-        }
-      ]
-    },
-    {
       "id": "ne-shipping-monitor",
       "name": "NE 出荷漏れ点検",
       "description": "ネクストエンジンの印刷待ち・引当待ち・確認待ち・印刷済を、受注日別・配送方法別に点検するツール。ツールアイコンから測定。",
