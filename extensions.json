@@ -299,8 +299,14 @@
       "icon": "assets/icons/yahoo-downloader.png",
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
-      "current_version": "1.6.1",
+      "current_version": "1.7.0",
       "versions": [
+        {
+          "version": "1.7.0",
+          "zip": "downloads/yahoo-downloader-v1.7.0.zip",
+          "updated_at": "2026-09-17",
+          "notes": ""
+        },
         {
           "version": "1.6.1",
           "zip": "downloads/yahoo-downloader-v1.6.1.zip",
