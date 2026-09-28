@@ -862,7 +862,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.3.9</span>
+  <span class="version-badge">v1.4.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1402,16 +1402,56 @@ function showDetail(id) {
     </div>
   `).join('');
 
-  document.getElementById('modal-body').innerHTML = `
-    <p class="modal-desc">${esc(ext.long_description || ext.description)}</p>
-
-    <div class="modal-section">
-      <h3>📦 インストール手順</h3>
+  // ファイル種別に応じて手順を変える
+  const curExt = cur.file_ext || (cur.zip ? cur.zip.split('.').pop().toLowerCase() : 'zip');
+  const fileType = ext.file_type || (curExt === 'zip' ? 'extension' : 'app');
+  let stepsHtml = '';
+  if (fileType === 'extension') {
+    stepsHtml = `
       <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>からZIPを取得</div></div>
       <div class="step"><div class="step-num">2</div><div class="step-text">ZIPをダブルクリックして解凍</div></div>
       <div class="step"><div class="step-num">3</div><div class="step-text">Chromeで <code>chrome://extensions</code> を開く</div></div>
       <div class="step"><div class="step-num">4</div><div class="step-text">右上の<strong>デベロッパーモード</strong>をON</div></div>
       <div class="step"><div class="step-num">5</div><div class="step-text"><strong>パッケージ化されていない拡張機能を読み込む</strong>から、解凍したフォルダを選択</div></div>
+    `;
+  } else if (curExt === 'exe') {
+    stepsHtml = `
+      <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>から EXE を取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">ダウンロードしたファイルを<strong>ダブルクリック</strong>で実行</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">「WindowsによってPCが保護されました」と出たら<strong>詳細情報 → 実行</strong>をクリック</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-text">画面の指示に従ってインストール</div></div>
+    `;
+  } else if (curExt === 'msi') {
+    stepsHtml = `
+      <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>から MSI を取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">ダウンロードしたファイルを<strong>ダブルクリック</strong>でインストーラー起動</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">画面の指示に従ってインストール</div></div>
+    `;
+  } else if (curExt === 'dmg' || curExt === 'pkg') {
+    stepsHtml = `
+      <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>から ${curExt.toUpperCase()} を取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">ダウンロードしたファイルを<strong>ダブルクリック</strong>で開く</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">アプリを<strong>Applicationsフォルダ</strong>にドラッグ(DMGの場合)、または画面の指示に従う(PKGの場合)</div></div>
+    `;
+  } else if (curExt === 'apk') {
+    stepsHtml = `
+      <div class="step"><div class="step-num">1</div><div class="step-text">Android端末で下の<strong>ダウンロード</strong>から APK を取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">設定 → 提供元不明のアプリを許可</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">APKファイルをタップしてインストール</div></div>
+    `;
+  } else {
+    stepsHtml = `
+      <div class="step"><div class="step-num">1</div><div class="step-text">下の<strong>ダウンロード</strong>からファイルを取得</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">ダウンロードしたファイルを実行してインストール</div></div>
+    `;
+  }
+
+  document.getElementById('modal-body').innerHTML = `
+    <p class="modal-desc">${esc(ext.long_description || ext.description)}</p>
+
+    <div class="modal-section">
+      <h3>📦 インストール手順</h3>
+      ${stepsHtml}
     </div>
 
     <div class="modal-section">
@@ -1475,14 +1515,18 @@ function showAddVersion(id) {
   `;
   document.getElementById('modal-body').innerHTML = `
     <div class="form-row">
-      <label class="form-label required">ZIPファイル</label>
+      <label class="form-label required">ファイル(ZIP / EXE / MSI / DMG / APK など)</label>
       <div class="dropzone" id="f-dropzone">
         <div class="dropzone-icon">📦</div>
-        <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
-        <input type="file" id="f-zip" accept=".zip" style="display:none">
+        <div class="dropzone-text">ファイルをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+        <input type="file" id="f-zip" accept=".zip,.exe,.msi,.dmg,.pkg,.apk,.app,.deb,.rpm,.appimage" style="display:none">
       </div>
       <div class="file-info" id="f-fileinfo"></div>
-      <div class="form-hint">バージョン番号は ZIP内 manifest.json から自動取得されます</div>
+      <div class="form-hint">
+        ZIP → 中の manifest.json からバージョン・アイコンを自動取得<br>
+        EXE → 埋め込みアイコンを自動抽出、バージョンはファイル名から検出<br>
+        その他 → ファイル名からバージョンを検出
+      </div>
     </div>
     <div class="form-row">
       <label class="form-label">変更内容(notes)</label>
@@ -1502,18 +1546,19 @@ function buildForm(ext, isEdit) {
     // 追加モード: 複数ZIP一括対応
     return `
       <div class="form-row">
-        <label class="form-label required">ZIPファイル(複数選択可)</label>
+        <label class="form-label required">ファイル(複数選択可)</label>
         <div class="dropzone" id="f-dropzone">
           <div class="dropzone-icon">📦</div>
-          <div class="dropzone-text">ZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
-          <div class="dropzone-hint">複数ZIPを一度にドロップできます</div>
-          <input type="file" id="f-zip" accept=".zip" multiple style="display:none">
+          <div class="dropzone-text">ZIP / EXE / MSI / DMG / APK 等をドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+          <div class="dropzone-hint">複数ファイルを一度にドロップできます</div>
+          <input type="file" id="f-zip" accept=".zip,.exe,.msi,.dmg,.pkg,.apk,.app,.deb,.rpm,.appimage" multiple style="display:none">
         </div>
         <div class="file-list" id="f-filelist"></div>
         <div class="form-hint">
-          名称はZIP内 manifest.json から自動取得、無ければファイル名をベースにします。<br>
-          バージョン・説明・アイコンも manifest.json から自動抽出。<br>
-          追加後、名称や説明は各カードの「✏️編集」から変更できます。
+          <strong>ZIP:</strong> manifest.json からバージョン・説明・アイコンを自動抽出<br>
+          <strong>EXE:</strong> 埋め込みアイコンを自動抽出、バージョンはファイル名から検出<br>
+          <strong>その他:</strong> ファイル名からバージョンを検出、アイコンは絵文字<br>
+          追加後、名称や説明は各カードの「編集」から変更できます。
         </div>
       </div>
     `;
@@ -1661,27 +1706,27 @@ async function submitAdd() {
   if (files.length === 0) { alert('ZIPファイルを選択してください'); return; }
 
   try {
-    showProgress(`${files.length}個のZIPを処理中`, '');
+    showProgress(`${files.length}個のファイルを処理中`, '');
 
     const added = [];
     const failed = [];
 
     for (let i = 0; i < files.length; i++) {
-      const zipFile = files[i];
+      const upFile = files[i];
       const prefix = `[${i + 1}/${files.length}] `;
       try {
-        updateProgress(`${prefix}ZIPを解析中`, zipFile.name);
+        updateProgress(`${prefix}ファイルを解析中`, upFile.name);
 
-        // ZIP内のmanifest.jsonとアイコンを抽出
-        const parsed = await parseExtensionZip(zipFile);
+        // ファイル種別ごとに解析(ZIP → manifest.json, EXE → PE parser)
+        const parsed = await parseUploadFile(upFile);
         const version = parsed.version || '1.0.0';
+        const ext = parsed.ext || 'zip';
         // 名称(表示用): manifestのname > ファイル名(拡張子なし)
-        const baseName = parsed.name || zipFile.name.replace(/\.zip$/i, '');
+        const baseName = parsed.name || upFile.name.replace(new RegExp('\\.' + ext + '$', 'i'), '');
         const description = parsed.description || '(説明なし)';
 
-        // ID: ZIPファイル名(拡張子なし)を基本に、空白だけハイフンに置換
-        // 例: "My Tool.zip" → "My-Tool"
-        const baseId = filenameToId(zipFile.name);
+        // ID: ファイル名(拡張子なし)を基本に、空白だけハイフンに置換
+        const baseId = filenameToId(upFile.name);
 
         // ID衝突回避(完全一致なら、末尾に番号を足していく)
         let id = baseId;
@@ -1690,10 +1735,10 @@ async function submitAdd() {
           id = `${baseId}-${n++}`;
         }
 
-        // ZIPアップロード
-        updateProgress(`${prefix}ZIPアップロード中`, `${id}-v${version}.zip`);
-        const zipPath = `downloads/${id}-v${version}.zip`;
-        await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+        // ファイル本体アップロード(拡張子は元のファイルに合わせる)
+        const filePath = `downloads/${id}-v${version}.${ext}`;
+        updateProgress(`${prefix}ファイルアップロード中`, filePath);
+        await uploadFile(filePath, upFile, `Add ${id} v${version}`);
 
         // アイコンアップロード
         let iconPath = '';
@@ -1714,18 +1759,20 @@ async function submitAdd() {
           icon: iconPath,
           author: 'Kai',
           permissions_summary: parsed.permissions_summary || '',
+          file_type: parsed.file_type || 'extension',
           current_version: version,
           versions: [{
             version,
-            zip: zipPath,
+            zip: filePath,
+            file_ext: ext,
             updated_at: today(),
             notes: '初回追加'
           }]
         };
         added.push(newExt);
       } catch (err) {
-        console.warn('ZIP処理失敗(続行):', zipFile.name, err.message);
-        failed.push({ file: zipFile.name, error: err.message });
+        console.warn('処理失敗(続行):', upFile.name, err.message);
+        failed.push({ file: upFile.name, error: err.message });
       }
     }
 
@@ -1760,18 +1807,44 @@ async function submitAdd() {
   }
 }
 
-// ZIPファイル名からIDを生成(完全一致重視、空白だけハイフンに置換)
+// サポートするファイル拡張子
+const SUPPORTED_EXTENSIONS = ['zip', 'exe', 'msi', 'dmg', 'pkg', 'apk', 'app', 'deb', 'rpm', 'appimage'];
+
+// ファイル名から拡張子を取得(小文字)
+function getFileExt(filename) {
+  const m = filename.match(/\.([^.]+)$/);
+  return m ? m[1].toLowerCase() : '';
+}
+
+// ファイル名からIDを生成(拡張子を除去、空白をハイフンに)
 // 例: "My Tool.zip" → "My-Tool"
 // 例: "RMS-Login-AutoFill-v1.3.0.zip" → "RMS-Login-AutoFill-v1.3.0"
+// 例: "MyApp.exe" → "MyApp"
 function filenameToId(filename) {
+  const extRegex = new RegExp('\\.(' + SUPPORTED_EXTENSIONS.join('|') + ')$', 'i');
   let id = filename
-    .replace(/\.zip$/i, '')         // .zip拡張子を除去
-    .replace(/[\s\u3000]+/g, '-')   // 半角・全角空白→ハイフン
-    .replace(/[\\\/]/g, '-')        // パス区切り文字も念のため置換
-    .replace(/-+/g, '-')            // 連続ハイフンを1つに
-    .replace(/^-|-$/g, '');         // 前後のハイフン除去
+    .replace(extRegex, '')
+    .replace(/[\s\u3000]+/g, '-')
+    .replace(/[\\\/]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
   if (!id) id = 'ext-' + Date.now().toString(36);
   return id;
+}
+
+// ファイル名からバージョンを検出
+// 例: "MyApp-v1.2.3.exe" → "1.2.3"
+// 例: "installer_2.0.1.msi" → "2.0.1"
+function extractVersionFromFilename(filename) {
+  const patterns = [
+    /[-_ ]v?(\d+\.\d+\.\d+(?:\.\d+)?)/i,
+    /[-_ ]v?(\d+\.\d+)/i,
+  ];
+  for (const p of patterns) {
+    const m = filename.match(p);
+    if (m) return m[1];
+  }
+  return '';
 }
 
 // 名称をIDに変換(古い処理。manifest.short_name用に残してある)
@@ -1796,13 +1869,35 @@ function nameToId(name) {
   return id;
 }
 
+// アップロードされたファイル(ZIP/EXE/その他)からメタ情報とアイコンを抽出
+async function parseUploadFile(file) {
+  const ext = getFileExt(file.name);
+  const result = {
+    id: '', name: '', version: '', description: '',
+    iconBlob: null, iconExt: '', permissions_summary: '',
+    file_type: 'app', // 'extension' or 'app'
+    ext: ext
+  };
+
+  if (ext === 'zip') {
+    return await parseExtensionZip(file, result);
+  } else if (ext === 'exe') {
+    return await parseExeFile(file, result);
+  } else {
+    // その他(msi/dmg/apkなど): ファイル名からバージョンだけ検出
+    result.version = extractVersionFromFilename(file.name) || '1.0.0';
+    result.description = `${ext.toUpperCase()}形式のアプリケーション`;
+    return result;
+  }
+}
+
 // ZIPからmanifest.jsonとアイコンを抽出
-async function parseExtensionZip(zipFile) {
-  const result = { id: '', name: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '' };
+async function parseExtensionZip(zipFile, result) {
+  result = result || { id: '', name: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '', file_type: 'extension', ext: 'zip' };
+  result.file_type = 'extension';
   try {
     const zip = await JSZip.loadAsync(zipFile);
 
-    // manifest.jsonを探す(直下優先、サブフォルダも一応探す)
     let manifestEntry = zip.file('manifest.json');
     let manifestPrefix = '';
     if (!manifestEntry) {
@@ -1834,17 +1929,181 @@ async function parseExtensionZip(zipFile) {
           const iconEntry = zip.file(iconFullPath);
           if (iconEntry) {
             result.iconBlob = await iconEntry.async('blob');
-            const ext = iconRelPath.split('.').pop().toLowerCase();
-            result.iconExt = (ext === 'jpg' ? 'jpeg' : ext);
+            const iext = iconRelPath.split('.').pop().toLowerCase();
+            result.iconExt = (iext === 'jpg' ? 'jpeg' : iext);
             break;
           }
         }
       }
+    } else {
+      // manifest.jsonが無いZIPはアプリ扱い
+      result.file_type = 'app';
+      result.version = extractVersionFromFilename(zipFile.name) || '1.0.0';
     }
   } catch (e) {
     console.warn('ZIP解析エラー(続行):', e.message);
   }
   return result;
+}
+
+// EXEファイルからアイコンリソースを抽出(Windows PE形式)
+async function parseExeFile(exeFile, result) {
+  result = result || { id: '', name: '', version: '', description: '', iconBlob: null, iconExt: '', permissions_summary: '', file_type: 'app', ext: 'exe' };
+  result.file_type = 'app';
+  result.version = extractVersionFromFilename(exeFile.name) || '1.0.0';
+  result.description = 'Windowsアプリケーション';
+
+  try {
+    const buffer = await exeFile.arrayBuffer();
+    const icon = extractIconFromPE(buffer);
+    if (icon) {
+      result.iconBlob = icon.blob;
+      result.iconExt = icon.ext;
+    }
+  } catch (e) {
+    console.warn('EXE解析エラー(続行):', e.message);
+  }
+  return result;
+}
+
+// PE形式のバイナリからアイコンリソースを取り出す
+function extractIconFromPE(buffer) {
+  const view = new DataView(buffer);
+  try {
+    if (view.getUint16(0, true) !== 0x5A4D) return null; // "MZ"
+    const peOffset = view.getUint32(0x3c, true);
+    if (view.getUint32(peOffset, true) !== 0x00004550) return null; // "PE\0\0"
+
+    const coffOffset = peOffset + 4;
+    const numberOfSections = view.getUint16(coffOffset + 2, true);
+    const sizeOfOptionalHeader = view.getUint16(coffOffset + 16, true);
+    const optionalHeaderOffset = coffOffset + 20;
+    const magic = view.getUint16(optionalHeaderOffset, true);
+    const is64 = magic === 0x20B;
+    const dataDirOffset = optionalHeaderOffset + (is64 ? 112 : 96);
+    const resourceDirRVA = view.getUint32(dataDirOffset + 2 * 8, true);
+    if (!resourceDirRVA) return null;
+
+    const sectionHeadersOffset = optionalHeaderOffset + sizeOfOptionalHeader;
+    const sections = [];
+    for (let i = 0; i < numberOfSections; i++) {
+      const off = sectionHeadersOffset + i * 40;
+      sections.push({
+        virtualSize: view.getUint32(off + 8, true),
+        virtualAddress: view.getUint32(off + 12, true),
+        pointerToRawData: view.getUint32(off + 20, true),
+        sizeOfRawData: view.getUint32(off + 16, true),
+      });
+    }
+    const rvaToOffset = (rva) => {
+      for (const s of sections) {
+        if (rva >= s.virtualAddress && rva < s.virtualAddress + Math.max(s.virtualSize, s.sizeOfRawData)) {
+          return s.pointerToRawData + (rva - s.virtualAddress);
+        }
+      }
+      return -1;
+    };
+
+    const resourceOffset = rvaToOffset(resourceDirRVA);
+    if (resourceOffset < 0) return null;
+
+    const parseResourceDir = (offset) => {
+      const namedEntries = view.getUint16(offset + 12, true);
+      const idEntries = view.getUint16(offset + 14, true);
+      const total = namedEntries + idEntries;
+      const results = [];
+      for (let i = 0; i < total; i++) {
+        const entryOff = offset + 16 + i * 8;
+        const id = view.getUint32(entryOff, true);
+        const dataOff = view.getUint32(entryOff + 4, true);
+        results.push({ id, dataOff: dataOff & 0x7FFFFFFF, isDir: (dataOff & 0x80000000) !== 0 });
+      }
+      return results;
+    };
+
+    const level1 = parseResourceDir(resourceOffset);
+    const iconGroupEntry = level1.find(e => e.id === 14 && e.isDir);
+    if (!iconGroupEntry) return null;
+
+    const level2 = parseResourceDir(resourceOffset + iconGroupEntry.dataOff);
+    if (level2.length === 0 || !level2[0].isDir) return null;
+
+    const level3 = parseResourceDir(resourceOffset + level2[0].dataOff);
+    if (level3.length === 0 || level3[0].isDir) return null;
+
+    const dataEntryOff = resourceOffset + level3[0].dataOff;
+    const iconGroupRVA = view.getUint32(dataEntryOff, true);
+    const iconGroupOff = rvaToOffset(iconGroupRVA);
+    if (iconGroupOff < 0) return null;
+
+    const count = view.getUint16(iconGroupOff + 4, true);
+    if (count === 0) return null;
+
+    const icons = [];
+    for (let i = 0; i < count; i++) {
+      const entryOff = iconGroupOff + 6 + i * 14;
+      const w = view.getUint8(entryOff);
+      const h = view.getUint8(entryOff + 1);
+      icons.push({
+        width: w === 0 ? 256 : w,
+        height: h === 0 ? 256 : h,
+        bitsPerPixel: view.getUint16(entryOff + 6, true),
+        dataSize: view.getUint32(entryOff + 8, true),
+        iconId: view.getUint16(entryOff + 12, true),
+      });
+    }
+    let bestIdx = 0, bestScore = 0;
+    icons.forEach((ic, i) => {
+      const score = ic.width * ic.height * (ic.bitsPerPixel || 32);
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
+    });
+    const bestIcon = icons[bestIdx];
+
+    const iconTypeEntry = level1.find(e => e.id === 3 && e.isDir);
+    if (!iconTypeEntry) return null;
+    const iconLevel2 = parseResourceDir(resourceOffset + iconTypeEntry.dataOff);
+    const iconIdEntry = iconLevel2.find(e => e.id === bestIcon.iconId && e.isDir);
+    if (!iconIdEntry) return null;
+    const iconLevel3 = parseResourceDir(resourceOffset + iconIdEntry.dataOff);
+    if (iconLevel3.length === 0 || iconLevel3[0].isDir) return null;
+
+    const iconDataEntryOff = resourceOffset + iconLevel3[0].dataOff;
+    const iconDataRVA = view.getUint32(iconDataEntryOff, true);
+    const iconDataSize = view.getUint32(iconDataEntryOff + 4, true);
+    const iconDataOff = rvaToOffset(iconDataRVA);
+    if (iconDataOff < 0) return null;
+
+    // PNG形式か確認
+    const sig = view.getUint32(iconDataOff, false);
+    if (sig === 0x89504E47) {
+      const blob = new Blob([new Uint8Array(buffer, iconDataOff, iconDataSize)], { type: 'image/png' });
+      return { blob, ext: 'png' };
+    }
+
+    // BMP DIB形式 → ICOラッパーで包む
+    const icoHeader = new ArrayBuffer(22);
+    const icoView = new DataView(icoHeader);
+    icoView.setUint16(0, 0, true);
+    icoView.setUint16(2, 1, true);
+    icoView.setUint16(4, 1, true);
+    icoView.setUint8(6, bestIcon.width === 256 ? 0 : bestIcon.width);
+    icoView.setUint8(7, bestIcon.height === 256 ? 0 : bestIcon.height);
+    icoView.setUint8(8, 0);
+    icoView.setUint8(9, 0);
+    icoView.setUint16(10, 1, true);
+    icoView.setUint16(12, bestIcon.bitsPerPixel, true);
+    icoView.setUint32(14, iconDataSize, true);
+    icoView.setUint32(18, 22, true);
+
+    const iconBytes = new Uint8Array(buffer, iconDataOff, iconDataSize);
+    const combined = new Uint8Array(22 + iconDataSize);
+    combined.set(new Uint8Array(icoHeader), 0);
+    combined.set(iconBytes, 22);
+    return { blob: new Blob([combined], { type: 'image/x-icon' }), ext: 'ico' };
+  } catch (e) {
+    console.warn('PE解析エラー:', e.message);
+    return null;
+  }
 }
 
 function blobToBase64(blob) {
@@ -1886,48 +2145,51 @@ async function submitEdit(id) {
 
 async function submitNewVersion(id) {
   const notes = document.getElementById('f-notes').value.trim();
-  const zipFile = document.getElementById('f-zip').files[0];
+  const upFile = document.getElementById('f-zip').files[0];
 
-  if (!zipFile) { alert('ZIPファイルを選択してください'); return; }
+  if (!upFile) { alert('ファイルを選択してください'); return; }
 
   const ext = STATE.data.extensions.find(e => e.id === id);
   if (!ext) return;
 
   // ファイル名(拡張子なし)が、この拡張のIDと一致するか確認
-  // 例: id = "RMS-Login", file = "RMS-Login.zip" or "RMS-Login-v1.4.zip" → OK
-  // 違う拡張のZIPを誤って入れてないかチェック
-  const fileBase = filenameToId(zipFile.name);
-  // 完全一致 OR 「id-」で始まる(idの後にバージョン等が続くケース)を許可
+  const fileBase = filenameToId(upFile.name);
   if (fileBase !== id && !fileBase.startsWith(id + '-')) {
-    if (!confirm(`⚠️ ファイル名と拡張IDが一致しません。\n\n拡張ID: ${id}\nファイル名: ${zipFile.name}\n\n別の拡張のZIPを誤ってアップロードしようとしている可能性があります。\nこのまま続けると、${id} のバージョンとして登録されます。\n\n本当に続行しますか?`)) {
+    if (!confirm(`⚠️ ファイル名と拡張IDが一致しません。\n\n拡張ID: ${id}\nファイル名: ${upFile.name}\n\n別の拡張のファイルを誤ってアップロードしようとしている可能性があります。\nこのまま続けると、${id} のバージョンとして登録されます。\n\n本当に続行しますか?`)) {
       return;
     }
   }
 
   try {
-    showProgress('ZIPを解析中', zipFile.name);
+    showProgress('ファイルを解析中', upFile.name);
 
-    // ZIPからバージョン番号を抽出
-    const parsed = await parseExtensionZip(zipFile);
-    const version = parsed.version || '';
+    // ファイル種別に応じて解析
+    const parsed = await parseUploadFile(upFile);
+    const fileExt = parsed.ext || 'zip';
+    let version = parsed.version || '';
     if (!version) {
-      hideProgress();
-      alert('ZIP内のmanifest.jsonからバージョン番号を取得できませんでした。\nmanifest.jsonに "version" フィールドがあるか確認してください。');
-      return;
+      // ZIPかつmanifest.jsonからversion取れず → エラー
+      if (fileExt === 'zip') {
+        hideProgress();
+        alert('ZIP内のmanifest.jsonからバージョン番号を取得できませんでした。\nmanifest.jsonに "version" フィールドがあるか確認してください。');
+        return;
+      }
+      // その他はデフォルト
+      version = '1.0.0';
     }
 
     // 既存バージョンチェック
     if (ext.versions.find(v => v.version === version)) {
       hideProgress();
-      alert(`v${version} は既に存在します。manifest.jsonのversionを更新してから再度アップロードしてください。`);
+      alert(`v${version} は既に存在します。バージョン番号を上げて再度アップロードしてください。`);
       return;
     }
 
     updateProgress('新バージョンをアップロード中', `v${version}`);
-    const zipPath = `downloads/${id}-v${version}.zip`;
-    await uploadFile(zipPath, zipFile, `Add ${id} v${version}`);
+    const filePath = `downloads/${id}-v${version}.${fileExt}`;
+    await uploadFile(filePath, upFile, `Add ${id} v${version}`);
 
-    // ZIPから新しいアイコンが取れていれば、それも上書きアップロード
+    // 新しいアイコンが取れていれば、それも上書きアップロード
     let iconPath = ext.icon || '';
     if (parsed.iconBlob && parsed.iconExt) {
       const newIconPath = `assets/icons/${id}.${parsed.iconExt}`;
@@ -1948,7 +2210,8 @@ async function submitNewVersion(id) {
     updateProgress('extensions.jsonを更新中', '');
     ext.versions.unshift({
       version,
-      zip: zipPath,
+      zip: filePath,
+      file_ext: fileExt,
       updated_at: today(),
       notes
     });
