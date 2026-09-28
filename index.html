@@ -202,6 +202,23 @@
     border-bottom-color: var(--accent);
   }
 
+  .tab-count {
+    display: inline-block;
+    background: var(--bg-soft);
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-left: 4px;
+    line-height: 1.4;
+  }
+
+  .section-tab.active .tab-count {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
   .count-badge {
     margin-left: auto;
     background: var(--warn-bg);
@@ -862,12 +879,12 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.4.0</span>
+  <span class="version-badge">v1.5.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
       <button class="admin-btn admin-btn-danger" id="bulk-delete-btn" style="display:none;">🗑️ <span id="bulk-delete-count">0</span>件削除</button>
-      <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 拡張を追加</button>
+      <button class="admin-btn admin-btn-primary" id="add-extension-btn">+ 追加</button>
       <button class="admin-btn admin-btn-icon" id="settings-btn" title="GitHub認証">⚙️</button>
     </div>
   </div>
@@ -876,7 +893,9 @@
 <div class="container">
 
   <div class="section-tabs">
-    <button class="section-tab active">拡張機能</button>
+    <button class="section-tab active" data-type="all">すべて <span class="tab-count" id="tab-count-all">0</span></button>
+    <button class="section-tab" data-type="extension">拡張機能 <span class="tab-count" id="tab-count-extension">0</span></button>
+    <button class="section-tab" data-type="app">アプリ <span class="tab-count" id="tab-count-app">0</span></button>
     <span class="count-badge">登録: <span id="count-total">0</span>件</span>
   </div>
 
@@ -928,6 +947,7 @@
 const STATE = {
   data: null,
   activeTag: 'all',
+  activeType: 'all',  // 'all' / 'extension' / 'app'
   search: '',
   isAdmin: false,
   pat: '',
@@ -950,6 +970,7 @@ async function init() {
   loadPat();
   await loadData();
   bindEvents();
+  updateAddButtonLabel();
 }
 
 function detectRepo() {
@@ -1004,6 +1025,21 @@ function bindEvents() {
     e.target.classList.add('active');
     STATE.activeTag = e.target.dataset.tag;
     render();
+  });
+
+  // タブ(すべて/拡張機能/アプリ)切替
+  document.querySelectorAll('.section-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      STATE.activeType = tab.dataset.type;
+      // 選択モード中に切り替えたら選択もリセット
+      STATE.selectedIds.clear();
+      updateBulkDeleteBtn();
+      // 「+ 追加」ボタンのラベルも切替
+      updateAddButtonLabel();
+      render();
+    });
   });
 
   document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -1076,6 +1112,15 @@ function updateBulkDeleteBtn() {
   } else {
     btn.style.display = 'none';
   }
+}
+
+// 「+ 追加」ボタンのラベルをアクティブタブに応じて更新
+function updateAddButtonLabel() {
+  const btn = document.getElementById('add-extension-btn');
+  if (!btn) return;
+  if (STATE.activeType === 'extension') btn.textContent = '+ 拡張機能を追加';
+  else if (STATE.activeType === 'app') btn.textContent = '+ アプリを追加';
+  else btn.textContent = '+ 追加';
 }
 
 async function bulkDeleteSelected() {
@@ -1313,15 +1358,38 @@ function renderTagFilter() {
   });
 }
 
+// 拡張の種別を判定するヘルパ
+function getExtType(ext) {
+  if (ext.file_type) return ext.file_type;
+  // 古いエントリはcurrent_versionのファイル拡張子で判定
+  const cur = ext.versions?.find(v => v.version === ext.current_version) || ext.versions?.[0];
+  if (!cur) return 'extension';
+  const fext = cur.file_ext || (cur.zip ? cur.zip.split('.').pop().toLowerCase() : 'zip');
+  return fext === 'zip' ? 'extension' : 'app';
+}
+
 function renderList() {
   const list = document.getElementById('rows');
+
+  // タブごとのカウント計算
+  const countAll = STATE.data.extensions.length;
+  const countExt = STATE.data.extensions.filter(e => getExtType(e) === 'extension').length;
+  const countApp = STATE.data.extensions.filter(e => getExtType(e) === 'app').length;
+  const tcAll = document.getElementById('tab-count-all');
+  const tcExt = document.getElementById('tab-count-extension');
+  const tcApp = document.getElementById('tab-count-app');
+  if (tcAll) tcAll.textContent = countAll;
+  if (tcExt) tcExt.textContent = countExt;
+  if (tcApp) tcApp.textContent = countApp;
+
   const filtered = STATE.data.extensions.filter(ext => {
+    const typeMatch = STATE.activeType === 'all' || getExtType(ext) === STATE.activeType;
     const tagMatch = STATE.activeTag === 'all' || (ext.tags || []).includes(STATE.activeTag);
     const searchMatch = !STATE.search ||
       ext.name.toLowerCase().includes(STATE.search) ||
       ext.description.toLowerCase().includes(STATE.search) ||
       (ext.tags || []).some(t => t.toLowerCase().includes(STATE.search));
-    return tagMatch && searchMatch;
+    return typeMatch && tagMatch && searchMatch;
   });
 
   if (filtered.length === 0) {
@@ -1473,9 +1541,19 @@ function showDetail(id) {
 // ===========================================
 function showAddExtension() {
   if (!requirePat()) return;
+  // アクティブタブに応じてタイトルとaccept属性を切替
+  let title = '新しく追加';
+  let subtitle = 'ファイルからメタ情報を自動抽出します';
+  if (STATE.activeType === 'extension') {
+    title = '新しい拡張機能を追加';
+    subtitle = 'ZIPファイル(Chrome拡張機能)を登録します';
+  } else if (STATE.activeType === 'app') {
+    title = '新しいアプリを追加';
+    subtitle = 'EXE / MSI / DMG / APK などのアプリファイルを登録します';
+  }
   document.getElementById('modal-header-content').innerHTML = `
-    <h2>新しい拡張機能を追加</h2>
-    <div class="modal-version">ZIPファイルとメタ情報を登録します</div>
+    <h2>${title}</h2>
+    <div class="modal-version">${subtitle}</div>
   `;
   document.getElementById('modal-body').innerHTML = buildForm({});
   document.getElementById('modal-footer').innerHTML = `
@@ -1543,23 +1621,44 @@ function showAddVersion(id) {
 
 function buildForm(ext, isEdit) {
   if (!isEdit) {
-    // 追加モード: 複数ZIP一括対応
+    // アクティブタブに応じてaccept属性と説明を切替
+    let acceptAttr = '.zip,.exe,.msi,.dmg,.pkg,.apk,.app,.deb,.rpm,.appimage';
+    let dropText = 'ZIP / EXE / MSI / DMG / APK 等をドラッグ&ドロップ、または<strong>クリックして選択</strong>';
+    let hintText = `
+      <strong>ZIP:</strong> manifest.json からバージョン・説明・アイコンを自動抽出<br>
+      <strong>EXE:</strong> 埋め込みアイコンを自動抽出、バージョンはファイル名から検出<br>
+      <strong>その他:</strong> ファイル名からバージョンを検出、アイコンは絵文字<br>
+      ファイル種別で「拡張機能」タブか「アプリ」タブに自動振り分けされます。
+    `;
+
+    if (STATE.activeType === 'extension') {
+      acceptAttr = '.zip';
+      dropText = 'Chrome拡張機能のZIPをドラッグ&ドロップ、または<strong>クリックして選択</strong>';
+      hintText = `
+        ZIP内の manifest.json からバージョン・説明・アイコンを自動抽出します。<br>
+        追加後、名称や説明は各カードの「編集」から変更できます。
+      `;
+    } else if (STATE.activeType === 'app') {
+      acceptAttr = '.exe,.msi,.dmg,.pkg,.apk,.app,.deb,.rpm,.appimage';
+      dropText = 'EXE / MSI / DMG / APK 等をドラッグ&ドロップ、または<strong>クリックして選択</strong>';
+      hintText = `
+        <strong>EXE:</strong> 埋め込みアイコンを自動抽出、バージョンはファイル名から検出<br>
+        <strong>MSI/DMG/APK/その他:</strong> ファイル名からバージョンを検出<br>
+        追加後、名称や説明は各カードの「編集」から変更できます。
+      `;
+    }
+
     return `
       <div class="form-row">
         <label class="form-label required">ファイル(複数選択可)</label>
         <div class="dropzone" id="f-dropzone">
           <div class="dropzone-icon">📦</div>
-          <div class="dropzone-text">ZIP / EXE / MSI / DMG / APK 等をドラッグ&ドロップ、または<strong>クリックして選択</strong></div>
+          <div class="dropzone-text">${dropText}</div>
           <div class="dropzone-hint">複数ファイルを一度にドロップできます</div>
-          <input type="file" id="f-zip" accept=".zip,.exe,.msi,.dmg,.pkg,.apk,.app,.deb,.rpm,.appimage" multiple style="display:none">
+          <input type="file" id="f-zip" accept="${acceptAttr}" multiple style="display:none">
         </div>
         <div class="file-list" id="f-filelist"></div>
-        <div class="form-hint">
-          <strong>ZIP:</strong> manifest.json からバージョン・説明・アイコンを自動抽出<br>
-          <strong>EXE:</strong> 埋め込みアイコンを自動抽出、バージョンはファイル名から検出<br>
-          <strong>その他:</strong> ファイル名からバージョンを検出、アイコンは絵文字<br>
-          追加後、名称や説明は各カードの「編集」から変更できます。
-        </div>
+        <div class="form-hint">${hintText}</div>
       </div>
     `;
   }
