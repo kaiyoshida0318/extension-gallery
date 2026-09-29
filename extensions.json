@@ -510,6 +510,27 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "偽gyazoくん-v1.1.0",
+      "name": "偽gyazoくん-v1.1.0",
+      "description": "Windowsアプリケーション",
+      "long_description": "Windowsアプリケーション",
+      "tags": [],
+      "icon": "assets/icons/偽gyazoくん-v1.1.0.png",
+      "author": "Kai",
+      "permissions_summary": "",
+      "file_type": "app",
+      "current_version": "1.1.0",
+      "versions": [
+        {
+          "version": "1.1.0",
+          "zip": "downloads/偽gyazoくん-v1.1.0-v1.1.0.exe",
+          "file_ext": "exe",
+          "updated_at": "2026-09-29",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
