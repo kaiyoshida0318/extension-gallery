@@ -510,27 +510,6 @@
           "notes": "初回追加"
         }
       ]
-    },
-    {
-      "id": "スクショ",
-      "name": "スクショ",
-      "description": "Windowsアプリケーション",
-      "long_description": "Windowsアプリケーション",
-      "tags": [],
-      "icon": "assets/icons/スクショ.png",
-      "author": "Kai",
-      "permissions_summary": "",
-      "file_type": "app",
-      "current_version": "1.0.0",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "zip": "downloads/スクショ-v1.0.0.exe",
-          "file_ext": "exe",
-          "updated_at": "2026-09-28",
-          "notes": "初回追加"
-        }
-      ]
     }
   ]
 }
