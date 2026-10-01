@@ -332,8 +332,15 @@
       "icon": "assets/icons/yahoo-downloader.png",
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
-      "current_version": "1.8.3",
+      "current_version": "1.9.0",
       "versions": [
+        {
+          "version": "1.9.0",
+          "zip": "downloads/yahoo-downloader-v1.9.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-01",
+          "notes": ""
+        },
         {
           "version": "1.8.3",
           "zip": "downloads/yahoo-downloader-v1.8.3.zip",
@@ -424,11 +431,11 @@
       "icon": "assets/icons/amazon-monthly-downloader.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "2.6.1",
+      "current_version": "2.6.0",
       "versions": [
         {
-          "version": "2.6.1",
-          "zip": "downloads/amazon-monthly-downloader-v2.6.1.zip",
+          "version": "2.6.0",
+          "zip": "downloads/amazon-monthly-downloader-v2.6.0.zip",
           "file_ext": "zip",
           "updated_at": "2026-10-01",
           "notes": ""
