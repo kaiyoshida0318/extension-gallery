@@ -424,11 +424,11 @@
       "icon": "assets/icons/amazon-monthly-downloader.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "2.3.2",
+      "current_version": "2.4.0",
       "versions": [
         {
-          "version": "2.3.2",
-          "zip": "downloads/amazon-monthly-downloader-v2.3.2.zip",
+          "version": "2.4.0",
+          "zip": "downloads/amazon-monthly-downloader-v2.4.0.zip",
           "file_ext": "zip",
           "updated_at": "2026-10-01",
           "notes": ""
