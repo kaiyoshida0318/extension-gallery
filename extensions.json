@@ -511,27 +511,6 @@
       ]
     },
     {
-      "id": "yahoo-downloader-ゆかい屋-v1.8.4",
-      "name": "Yahoo一括ダウンローダー (ゆかい屋)",
-      "description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
-      "long_description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
-      "tags": [],
-      "icon": "assets/icons/yahoo-downloader-ゆかい屋-v1.8.4.png",
-      "author": "Kai",
-      "permissions_summary": "scripting, tabs, storage",
-      "file_type": "extension",
-      "current_version": "1.8.4",
-      "versions": [
-        {
-          "version": "1.8.4",
-          "zip": "downloads/yahoo-downloader-ゆかい屋-v1.8.4-v1.8.4.zip",
-          "file_ext": "zip",
-          "updated_at": "2026-10-01",
-          "notes": "初回追加"
-        }
-      ]
-    },
-    {
       "id": "yahoo-downloader-KAIRY-v1.8.6",
       "name": "Yahoo一括ダウンローダー (KAIRY)",
       "description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
