@@ -513,15 +513,8 @@
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
       "file_type": "extension",
-      "current_version": "1.8.7",
+      "current_version": "1.8.4",
       "versions": [
-        {
-          "version": "1.8.7",
-          "zip": "downloads/yahoo-downloader-ゆかい屋-v1.8.4-v1.8.7.zip",
-          "file_ext": "zip",
-          "updated_at": "2026-10-02",
-          "notes": ""
-        },
         {
           "version": "1.8.4",
           "zip": "downloads/yahoo-downloader-ゆかい屋-v1.8.4-v1.8.4.zip",
@@ -541,8 +534,15 @@
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
       "file_type": "extension",
-      "current_version": "1.8.6",
+      "current_version": "1.8.7",
       "versions": [
+        {
+          "version": "1.8.7",
+          "zip": "downloads/yahoo-downloader-KAIRY-v1.8.6-v1.8.7.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-02",
+          "notes": ""
+        },
         {
           "version": "1.8.6",
           "zip": "downloads/yahoo-downloader-KAIRY-v1.8.6-v1.8.6.zip",
