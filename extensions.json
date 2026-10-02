@@ -513,8 +513,15 @@
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
       "file_type": "extension",
-      "current_version": "1.8.4",
+      "current_version": "1.8.7",
       "versions": [
+        {
+          "version": "1.8.7",
+          "zip": "downloads/yahoo-downloader-ゆかい屋-v1.8.4-v1.8.7.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-02",
+          "notes": ""
+        },
         {
           "version": "1.8.4",
           "zip": "downloads/yahoo-downloader-ゆかい屋-v1.8.4-v1.8.4.zip",
