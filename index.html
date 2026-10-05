@@ -245,6 +245,41 @@
     position: relative;
   }
 
+  .sort-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .sort-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .sort-select {
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 9px 32px 9px 12px;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: border-color 0.15s;
+  }
+
+  .sort-select:focus { border-color: var(--accent); }
+  .sort-select:hover { border-color: var(--accent); }
+
   .search-box::before {
     content: "🔍";
     position: absolute;
@@ -879,7 +914,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.5.0</span>
+  <span class="version-badge">v1.6.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -902,6 +937,17 @@
   <div class="controls">
     <div class="search-box">
       <input type="text" class="search-input" id="search" placeholder="拡張機能名・タグで検索...">
+    </div>
+    <div class="sort-box">
+      <label for="sort-select" class="sort-label">並べ替え</label>
+      <select id="sort-select" class="sort-select">
+        <option value="updated-desc">最終更新日 (新しい順)</option>
+        <option value="updated-asc">最終更新日 (古い順)</option>
+        <option value="name-asc">名称 (昇順)</option>
+        <option value="name-desc">名称 (降順)</option>
+        <option value="version-desc">バージョン (新しい順)</option>
+        <option value="id-asc">ID (昇順)</option>
+      </select>
     </div>
   </div>
 
@@ -948,6 +994,7 @@ const STATE = {
   data: null,
   activeTag: 'all',
   activeType: 'all',  // 'all' / 'extension' / 'app'
+  sortBy: 'updated-desc',  // ソート順
   search: '',
   isAdmin: false,
   pat: '',
@@ -960,6 +1007,7 @@ const STATE = {
 };
 
 const PAT_KEY = 'ext_gallery_pat';
+const SORT_KEY = 'ext_gallery_sort';
 
 // ===========================================
 // 初期化
@@ -968,9 +1016,18 @@ async function init() {
   detectRepo();
   detectAdminMode();
   loadPat();
+  loadSort();
   await loadData();
   bindEvents();
   updateAddButtonLabel();
+}
+
+// ソート順を localStorage から復元
+function loadSort() {
+  const saved = localStorage.getItem(SORT_KEY);
+  if (saved) STATE.sortBy = saved;
+  const sel = document.getElementById('sort-select');
+  if (sel) sel.value = STATE.sortBy;
 }
 
 function detectRepo() {
@@ -1018,6 +1075,17 @@ function bindEvents() {
     STATE.search = e.target.value.toLowerCase();
     render();
   });
+
+  // ソート順変更
+  const sortSel = document.getElementById('sort-select');
+  if (sortSel) {
+    sortSel.value = STATE.sortBy;
+    sortSel.addEventListener('change', e => {
+      STATE.sortBy = e.target.value;
+      try { localStorage.setItem(SORT_KEY, STATE.sortBy); } catch(e) {}
+      render();
+    });
+  }
 
   document.getElementById('tag-filter').addEventListener('click', e => {
     if (!e.target.classList.contains('tag-pill')) return;
@@ -1358,6 +1426,41 @@ function renderTagFilter() {
   });
 }
 
+// 拡張リストをソート順に並べ替え(破壊的)
+function sortExtensions(list, sortBy) {
+  const cmpStr = (a, b) => a.localeCompare(b, 'ja');
+  const cmpVer = (a, b) => {
+    const pa = (a || '0').split('.').map(n => parseInt(n, 10) || 0);
+    const pb = (b || '0').split('.').map(n => parseInt(n, 10) || 0);
+    const len = Math.max(pa.length, pb.length);
+    for (let i = 0; i < len; i++) {
+      const da = pa[i] || 0, db = pb[i] || 0;
+      if (da !== db) return da - db;
+    }
+    return 0;
+  };
+
+  const getUpdated = (ext) => {
+    const cur = currentVersion(ext);
+    return cur.updated_at || '';
+  };
+
+  switch (sortBy) {
+    case 'name-asc':
+      list.sort((a, b) => cmpStr(a.name || '', b.name || '')); break;
+    case 'name-desc':
+      list.sort((a, b) => cmpStr(b.name || '', a.name || '')); break;
+    case 'updated-asc':
+      list.sort((a, b) => cmpStr(getUpdated(a), getUpdated(b))); break;
+    case 'updated-desc':
+      list.sort((a, b) => cmpStr(getUpdated(b), getUpdated(a))); break;
+    case 'version-desc':
+      list.sort((a, b) => cmpVer(b.current_version, a.current_version)); break;
+    case 'id-asc':
+      list.sort((a, b) => cmpStr(a.id || '', b.id || '')); break;
+  }
+}
+
 // 拡張の種別を判定するヘルパ
 function getExtType(ext) {
   if (ext.file_type) return ext.file_type;
@@ -1391,6 +1494,9 @@ function renderList() {
       (ext.tags || []).some(t => t.toLowerCase().includes(STATE.search));
     return typeMatch && tagMatch && searchMatch;
   });
+
+  // ソート適用
+  sortExtensions(filtered, STATE.sortBy);
 
   if (filtered.length === 0) {
     list.innerHTML = `
