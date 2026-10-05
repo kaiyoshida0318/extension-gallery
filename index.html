@@ -910,7 +910,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.6.2</span>
+  <span class="version-badge">v1.7.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1441,17 +1441,6 @@ function renderTagFilter() {
 // 拡張リストをソート順に並べ替え(破壊的)
 function sortExtensions(list, sortBy) {
   const cmpStr = (a, b) => a.localeCompare(b, 'ja');
-  const cmpVer = (a, b) => {
-    const pa = (a || '0').split('.').map(n => parseInt(n, 10) || 0);
-    const pb = (b || '0').split('.').map(n => parseInt(n, 10) || 0);
-    const len = Math.max(pa.length, pb.length);
-    for (let i = 0; i < len; i++) {
-      const da = pa[i] || 0, db = pb[i] || 0;
-      if (da !== db) return da - db;
-    }
-    return 0;
-  };
-
   const getUpdated = (ext) => {
     const cur = currentVersion(ext);
     return cur.updated_at || '';
@@ -1467,9 +1456,9 @@ function sortExtensions(list, sortBy) {
     case 'updated-desc':
       list.sort((a, b) => cmpStr(getUpdated(b), getUpdated(a))); break;
     case 'version-desc':
-      list.sort((a, b) => cmpVer(b.current_version, a.current_version)); break;
+      list.sort((a, b) => cmpVersionStr(b.current_version, a.current_version)); break;
     case 'version-asc':
-      list.sort((a, b) => cmpVer(a.current_version, b.current_version)); break;
+      list.sort((a, b) => cmpVersionStr(a.current_version, b.current_version)); break;
     case 'id-asc':
       list.sort((a, b) => cmpStr(a.id || '', b.id || '')); break;
   }
@@ -1929,68 +1918,111 @@ async function submitAdd() {
   try {
     showProgress(`${files.length}個のファイルを処理中`, '');
 
-    const added = [];
+    const added = [];           // 新規追加の拡張
+    const updated = [];         // 既存拡張へのバージョン追加
     const failed = [];
+    const touchedIds = new Set();
 
-    for (let i = 0; i < files.length; i++) {
-      const upFile = files[i];
-      const prefix = `[${i + 1}/${files.length}] `;
+    // ファイル名でバージョン順に並べ替えて処理(_1 → _2 → ... と昇順で入れる)
+    const sortedFiles = [...files].sort((a, b) => {
+      const va = extractVersionFromFilename(a.name) || '0';
+      const vb = extractVersionFromFilename(b.name) || '0';
+      return cmpVersionStr(va, vb);
+    });
+
+    for (let i = 0; i < sortedFiles.length; i++) {
+      const upFile = sortedFiles[i];
+      const prefix = `[${i + 1}/${sortedFiles.length}] `;
       try {
         updateProgress(`${prefix}ファイルを解析中`, upFile.name);
 
-        // ファイル種別ごとに解析(ZIP → manifest.json, EXE → PE parser)
+        // ファイル種別ごとに解析
         const parsed = await parseUploadFile(upFile);
         const version = parsed.version || '1.0.0';
         const ext = parsed.ext || 'zip';
-        // 名称(表示用): manifestのname > ファイル名(拡張子なし)
         const baseName = parsed.name || upFile.name.replace(new RegExp('\\.' + ext + '$', 'i'), '');
         const description = parsed.description || '(説明なし)';
 
-        // ID: ファイル名(拡張子なし)を基本に、空白だけハイフンに置換
+        // ベースID取得(末尾の _数字 等を除外)
         const baseId = filenameToId(upFile.name);
 
-        // ID衝突回避(完全一致なら、末尾に番号を足していく)
-        let id = baseId;
-        let n = 2;
-        while (STATE.data.extensions.find(e => e.id === id) || added.find(e => e.id === id)) {
-          id = `${baseId}-${n++}`;
-        }
+        // 同じベースIDが既存または既に追加予定にあるか確認
+        const existingInData = STATE.data.extensions.find(e => e.id === baseId);
+        const existingInAdded = added.find(e => e.id === baseId);
+        const targetExt = existingInData || existingInAdded;
 
-        // ファイル本体アップロード(拡張子は元のファイルに合わせる)
-        const filePath = `downloads/${id}-v${version}.${ext}`;
-        updateProgress(`${prefix}ファイルアップロード中`, filePath);
-        await uploadFile(filePath, upFile, `Add ${id} v${version}`);
+        if (targetExt) {
+          // 既存エントリに新バージョンとして追加
+          if (targetExt.versions.find(v => v.version === version)) {
+            // 同一バージョンは重複登録しない
+            console.warn(`${baseId} v${version} は既に存在するためスキップ`);
+            continue;
+          }
 
-        // アイコンアップロード
-        let iconPath = '';
-        if (parsed.iconBlob && parsed.iconExt) {
-          iconPath = `assets/icons/${id}.${parsed.iconExt}`;
-          updateProgress(`${prefix}アイコンアップロード中`, iconPath);
-          const iconBase64 = await blobToBase64(parsed.iconBlob);
-          await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${id}`);
-        }
+          const filePath = `downloads/${baseId}-v${version}.${ext}`;
+          updateProgress(`${prefix}追加バージョンアップロード中`, filePath);
+          await uploadFile(filePath, upFile, `Add ${baseId} v${version}`);
 
-        // 構造体を追加(jsonへの反映は最後に一括)
-        const newExt = {
-          id,
-          name: baseName,
-          description,
-          long_description: description,
-          tags: [],
-          icon: iconPath,
-          author: 'Kai',
-          permissions_summary: parsed.permissions_summary || '',
-          file_type: parsed.file_type || 'extension',
-          current_version: version,
-          versions: [{
+          targetExt.versions.unshift({
             version,
             zip: filePath,
             file_ext: ext,
             updated_at: today(),
-            notes: '初回追加'
-          }]
-        };
-        added.push(newExt);
+            notes: '一括追加'
+          });
+
+          // より新しいバージョンなら current にする
+          if (cmpVersionStr(version, targetExt.current_version) > 0) {
+            targetExt.current_version = version;
+            // 最新バージョンのアイコン/情報を反映
+            if (parsed.iconBlob && parsed.iconExt) {
+              const iconPath = `assets/icons/${baseId}.${parsed.iconExt}`;
+              updateProgress(`${prefix}アイコン更新中`, iconPath);
+              const iconBase64 = await blobToBase64(parsed.iconBlob);
+              await GH.putFileSafe(iconPath, iconBase64, `Update icon for ${baseId}`);
+              targetExt.icon = iconPath;
+            }
+            if (parsed.name) targetExt.name = parsed.name;
+          }
+
+          if (!updated.find(u => u.id === baseId)) updated.push(targetExt);
+          touchedIds.add(baseId);
+        } else {
+          // 新規登録
+          const filePath = `downloads/${baseId}-v${version}.${ext}`;
+          updateProgress(`${prefix}ファイルアップロード中`, filePath);
+          await uploadFile(filePath, upFile, `Add ${baseId} v${version}`);
+
+          let iconPath = '';
+          if (parsed.iconBlob && parsed.iconExt) {
+            iconPath = `assets/icons/${baseId}.${parsed.iconExt}`;
+            updateProgress(`${prefix}アイコンアップロード中`, iconPath);
+            const iconBase64 = await blobToBase64(parsed.iconBlob);
+            await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${baseId}`);
+          }
+
+          const newExt = {
+            id: baseId,
+            name: baseName,
+            description,
+            long_description: description,
+            tags: [],
+            icon: iconPath,
+            author: 'Kai',
+            permissions_summary: parsed.permissions_summary || '',
+            file_type: parsed.file_type || 'extension',
+            current_version: version,
+            versions: [{
+              version,
+              zip: filePath,
+              file_ext: ext,
+              updated_at: today(),
+              notes: '初回追加'
+            }]
+          };
+          added.push(newExt);
+          touchedIds.add(baseId);
+        }
       } catch (err) {
         console.warn('処理失敗(続行):', upFile.name, err.message);
         failed.push({ file: upFile.name, error: err.message });
@@ -1998,23 +2030,29 @@ async function submitAdd() {
     }
 
     // extensions.jsonを一括更新
-    if (added.length > 0) {
-      updateProgress('extensions.jsonを更新中', `${added.length}件追加`);
+    if (added.length > 0 || updated.length > 0) {
+      updateProgress('extensions.jsonを更新中', `新規${added.length}件 / 追加${updated.length}件`);
       for (const ext of added) STATE.data.extensions.push(ext);
-      const msg = added.length === 1
-        ? `Add extension: ${added[0].id} v${added[0].current_version}`
-        : `Add ${added.length} extensions`;
+      const msg = `Add ${added.length} new, update ${updated.length}`;
       await saveJson(msg);
     }
 
-    // 反映待ち(extensions.jsonの中身で確認)
-    if (added.length > 0) {
-      const addedIds = added.map(e => e.id);
-      await waitForExtensionPublished(addedIds, 120);
+    // 反映待ち
+    if (touchedIds.size > 0) {
+      await waitForExtensionPublished(Array.from(touchedIds), 120);
     }
 
     updateProgress('完了 - サイトを再読込中...', '');
-    let msg = `✓ ${added.length}個の拡張機能を追加しました!`;
+    let msg = '';
+    if (added.length > 0 && updated.length > 0) {
+      msg = `✓ 新規${added.length}件を追加、${updated.length}件に新バージョンを追加しました!`;
+    } else if (added.length > 0) {
+      msg = `✓ ${added.length}個の拡張機能を追加しました!`;
+    } else if (updated.length > 0) {
+      msg = `✓ ${updated.length}件に新バージョンを追加しました!`;
+    } else {
+      msg = '追加する項目がありませんでした。';
+    }
     if (failed.length > 0) {
       msg += `\n\n失敗 ${failed.length}件:\n` + failed.map(f => `- ${f.file}: ${f.error}`).join('\n');
     }
@@ -2045,6 +2083,8 @@ function filenameToId(filename) {
   const extRegex = new RegExp('\\.(' + SUPPORTED_EXTENSIONS.join('|') + ')$', 'i');
   let id = filename
     .replace(extRegex, '')
+    .replace(/_\d+$/, '')
+    .replace(/[-_ ]v\d+(?:\.\d+)+$/i, '')
     .replace(/[\s\u3000]+/g, '-')
     .replace(/[\\\/]/g, '-')
     .replace(/-+/g, '-')
@@ -2056,16 +2096,32 @@ function filenameToId(filename) {
 // ファイル名からバージョンを検出
 // 例: "MyApp-v1.2.3.exe" → "1.2.3"
 // 例: "installer_2.0.1.msi" → "2.0.1"
+// 例: "nekopos-sender_8.zip" → "8"
 function extractVersionFromFilename(filename) {
+  const extRegex = new RegExp('\\.(' + SUPPORTED_EXTENSIONS.join('|') + ')$', 'i');
+  const base = filename.replace(extRegex, '');
   const patterns = [
-    /[-_ ]v?(\d+\.\d+\.\d+(?:\.\d+)?)/i,
-    /[-_ ]v?(\d+\.\d+)/i,
+    /[-_ ]v?(\d+\.\d+\.\d+(?:\.\d+)?)$/i,
+    /[-_ ]v?(\d+\.\d+)$/i,
+    /_(\d+)$/,
   ];
   for (const p of patterns) {
-    const m = filename.match(p);
+    const m = base.match(p);
     if (m) return m[1];
   }
   return '';
+}
+
+// バージョン比較(semver風):1.10.0 > 1.9.0 を正しく判定
+function cmpVersionStr(a, b) {
+  const pa = (a || '0').split('.').map(n => parseInt(n, 10) || 0);
+  const pb = (b || '0').split('.').map(n => parseInt(n, 10) || 0);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const da = pa[i] || 0, db = pb[i] || 0;
+    if (da !== db) return da - db;
+  }
+  return 0;
 }
 
 // 名称をIDに変換(古い処理。manifest.short_name用に残してある)
