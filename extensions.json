@@ -611,8 +611,15 @@
       "author": "Kai",
       "permissions_summary": "storage, scripting, https://main.next-engine.com/*",
       "file_type": "extension",
-      "current_version": "1.3.0",
+      "current_version": "1.4.1",
       "versions": [
+        {
+          "version": "1.4.1",
+          "zip": "downloads/nekopos-sender_5-v1.4.1.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-05",
+          "notes": ""
+        },
         {
           "version": "1.3.0",
           "zip": "downloads/nekopos-sender_5-v1.3.0.zip",
