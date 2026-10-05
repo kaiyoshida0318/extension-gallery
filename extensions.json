@@ -565,6 +565,27 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "chatgpt-batch-v1.12.0",
+      "name": "ChatGPT 画像一括送信",
+      "description": "画像をまとめてドロップし、指示文と一緒に設定した間隔でChatGPTの画面へ1枚ずつ送信します。",
+      "long_description": "画像をまとめてドロップし、指示文と一緒に設定した間隔でChatGPTの画面へ1枚ずつ送信します。",
+      "tags": [],
+      "icon": "",
+      "author": "Kai",
+      "permissions_summary": "storage",
+      "file_type": "extension",
+      "current_version": "1.12.0",
+      "versions": [
+        {
+          "version": "1.12.0",
+          "zip": "downloads/chatgpt-batch-v1.12.0-v1.12.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-05",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
