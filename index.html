@@ -245,40 +245,34 @@
     position: relative;
   }
 
-  .sort-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .sort-label {
-    font-size: 12px;
-    color: var(--text-dim);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .sort-select {
-    background: #fff;
-    border: 1px solid var(--border-strong);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 9px 32px 9px 12px;
-    border-radius: 8px;
-    outline: none;
+  /* クリックでソート可能なヘッダ列 */
+  .sortable {
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    transition: border-color 0.15s;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s;
   }
 
-  .sort-select:focus { border-color: var(--accent); }
-  .sort-select:hover { border-color: var(--accent); }
+  .sortable:hover {
+    color: var(--accent);
+  }
+
+  .sortable.active {
+    color: var(--accent);
+  }
+
+  .sort-arrow {
+    display: inline-block;
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .sortable.active .sort-arrow {
+    opacity: 1;
+  }
 
   .search-box::before {
     content: "🔍";
@@ -914,7 +908,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.6.0</span>
+  <span class="version-badge">v1.6.1</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -938,17 +932,6 @@
     <div class="search-box">
       <input type="text" class="search-input" id="search" placeholder="拡張機能名・タグで検索...">
     </div>
-    <div class="sort-box">
-      <label for="sort-select" class="sort-label">並べ替え</label>
-      <select id="sort-select" class="sort-select">
-        <option value="updated-desc">最終更新日 (新しい順)</option>
-        <option value="updated-asc">最終更新日 (古い順)</option>
-        <option value="name-asc">名称 (昇順)</option>
-        <option value="name-desc">名称 (降順)</option>
-        <option value="version-desc">バージョン (新しい順)</option>
-        <option value="id-asc">ID (昇順)</option>
-      </select>
-    </div>
   </div>
 
   <div class="tag-filter" id="tag-filter">
@@ -958,8 +941,12 @@
   <div class="list">
     <div class="list-header" id="list-header">
       <div></div>
-      <div>名称 / 説明</div>
-      <div>バージョン</div>
+      <div>
+        <span class="sortable" data-sort-col="name">名称 / 説明 <span class="sort-arrow"></span></span>
+      </div>
+      <div>
+        <span class="sortable" data-sort-col="updated">バージョン / 更新日 <span class="sort-arrow"></span></span>
+      </div>
       <div style="text-align: right;">アクション</div>
     </div>
     <div id="rows"></div>
@@ -1026,8 +1013,17 @@ async function init() {
 function loadSort() {
   const saved = localStorage.getItem(SORT_KEY);
   if (saved) STATE.sortBy = saved;
-  const sel = document.getElementById('sort-select');
-  if (sel) sel.value = STATE.sortBy;
+}
+
+// ソート状態をヘッダUIに反映(アクティブ列と矢印)
+function updateSortHeaderUI() {
+  const [col, dir] = (STATE.sortBy || 'updated-desc').split('-');
+  document.querySelectorAll('.sortable').forEach(el => {
+    const isActive = el.dataset.sortCol === col;
+    el.classList.toggle('active', isActive);
+    const arrow = el.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = isActive ? (dir === 'asc' ? '▲' : '▼') : '';
+  });
 }
 
 function detectRepo() {
@@ -1076,16 +1072,24 @@ function bindEvents() {
     render();
   });
 
-  // ソート順変更
-  const sortSel = document.getElementById('sort-select');
-  if (sortSel) {
-    sortSel.value = STATE.sortBy;
-    sortSel.addEventListener('change', e => {
-      STATE.sortBy = e.target.value;
+  // 列ヘッダクリックでソート
+  document.querySelectorAll('.sortable').forEach(el => {
+    el.addEventListener('click', () => {
+      const col = el.dataset.sortCol; // 'name' or 'updated'
+      const cur = STATE.sortBy;
+      let next;
+      if (col === 'name') {
+        next = (cur === 'name-asc') ? 'name-desc' : 'name-asc';
+      } else if (col === 'updated') {
+        next = (cur === 'updated-desc') ? 'updated-asc' : 'updated-desc';
+      }
+      STATE.sortBy = next;
       try { localStorage.setItem(SORT_KEY, STATE.sortBy); } catch(e) {}
+      updateSortHeaderUI();
       render();
     });
-  }
+  });
+  updateSortHeaderUI();
 
   document.getElementById('tag-filter').addEventListener('click', e => {
     if (!e.target.classList.contains('tag-pill')) return;
