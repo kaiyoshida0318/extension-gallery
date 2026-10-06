@@ -360,8 +360,15 @@
       "icon": "assets/icons/amazon-monthly-downloader.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "2.7.2",
+      "current_version": "2.7.3",
       "versions": [
+        {
+          "version": "2.7.3",
+          "zip": "downloads/amazon-monthly-downloader-v2.7.3.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-06 10:54",
+          "notes": ""
+        },
         {
           "version": "2.7.2",
           "zip": "downloads/amazon-monthly-downloader-v2.7.2.zip",
