@@ -910,7 +910,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.7.1</span>
+  <span class="version-badge">v1.7.2</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -1947,8 +1947,16 @@ async function submitAdd() {
         const baseId = filenameToId(upFile.name);
 
         // 同じベースIDが既存または既に追加予定にあるか確認
-        const existingInData = STATE.data.extensions.find(e => e.id === baseId);
-        const existingInAdded = added.find(e => e.id === baseId);
+        // 既存IDが古い形式(xxx-v1.12.0)の場合も正規化して一致判定
+        const normalizeBase = (s) => (s || '')
+          .replace(/_\d+$/, '')
+          .replace(/[-_ ]v\d+(?:\.\d+)+$/i, '');
+        const existingInData = STATE.data.extensions.find(e =>
+          e.id === baseId || normalizeBase(e.id) === baseId
+        );
+        const existingInAdded = added.find(e =>
+          e.id === baseId || normalizeBase(e.id) === baseId
+        );
         const targetExt = existingInData || existingInAdded;
 
         if (targetExt) {
@@ -2430,8 +2438,13 @@ async function submitNewVersion(id) {
   if (!ext) return;
 
   // ファイル名(拡張子なし)が、この拡張のIDと一致するか確認
+  // ID側もバージョン表記を除去して比較(古いIDが "xxx-v1.12.0" のようにバージョン含みのケースに対応)
+  const normalizeBase = (s) => (s || '')
+    .replace(/_\d+$/, '')
+    .replace(/[-_ ]v\d+(?:\.\d+)+$/i, '');
   const fileBase = filenameToId(upFile.name);
-  if (fileBase !== id && !fileBase.startsWith(id + '-')) {
+  const idBase = normalizeBase(id);
+  if (fileBase !== id && fileBase !== idBase && !fileBase.startsWith(id + '-') && !fileBase.startsWith(idBase + '-')) {
     if (!confirm(`⚠️ ファイル名と拡張IDが一致しません。\n\n拡張ID: ${id}\nファイル名: ${upFile.name}\n\n別の拡張のファイルを誤ってアップロードしようとしている可能性があります。\nこのまま続けると、${id} のバージョンとして登録されます。\n\n本当に続行しますか?`)) {
       return;
     }
