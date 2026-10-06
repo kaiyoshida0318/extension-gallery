@@ -440,6 +440,40 @@
   .row-updated { font-size: 12px; color: var(--text-dim); }
   .row-date { font-size: 12px; color: var(--text-faint); }
 
+  /* 反映待ちバッジ */
+  .reflection-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-top: 4px;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .reflection-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--warn-text);
+    animation: pulse-dot 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .row.pending-row {
+    background: rgba(255, 193, 7, 0.04);
+  }
+
   .row-actions {
     display: flex;
     gap: 4px;
@@ -910,7 +944,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.7.2</span>
+  <span class="version-badge">v1.8.0</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -995,7 +1029,8 @@ const STATE = {
   branch: 'main',
   busy: false,
   selectMode: false,
-  selectedIds: new Set()
+  selectedIds: new Set(),
+  pendingReflection: new Set()  // 反映待ちのID + 期待バージョンのペア → "id|version"
 };
 
 const PAT_KEY = 'ext_gallery_pat';
@@ -1519,8 +1554,11 @@ function renderList() {
       <button class="btn btn-danger" onclick="event.stopPropagation(); confirmDelete('${esc(ext.id)}')" title="削除">削除</button>
     ` : '';
 
+    const isPending = isPendingReflection(ext.id, cur.version);
+    const pendingBadge = isPending ? '<div class="reflection-badge">反映中...</div>' : '';
+
     return `
-      <div class="row${selected ? ' selected' : ''}" data-id="${esc(ext.id)}" onclick="onRowClick('${esc(ext.id)}')">
+      <div class="row${selected ? ' selected' : ''}${isPending ? ' pending-row' : ''}" data-id="${esc(ext.id)}" onclick="onRowClick('${esc(ext.id)}')">
         ${STATE.selectMode ? `
           <div class="row-checkbox">
             <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${esc(ext.id)}')">
@@ -1539,6 +1577,7 @@ function renderList() {
         </div>
         <div class="row-version">
           <div class="row-version-num">v${esc(cur.version)}</div>
+          ${pendingBadge}
         </div>
         <div class="row-updated">
           <div class="row-date">${esc(formatUpdatedAt(cur.updated_at))}</div>
@@ -2045,17 +2084,24 @@ async function submitAdd() {
       await saveJson(msg);
     }
 
-    // 反映待ち
-    if (touchedIds.size > 0) {
-      await waitForExtensionPublished(Array.from(touchedIds), 120);
+    // ★ 完了として扱う。反映はバックグラウンド。
+    hideProgress();
+    closeModal();
+    render();  // 楽観的に画面更新
+
+    // バックグラウンドで反映監視(追加/更新した id+version のペアを対象)
+    const targets = [];
+    for (const ext of added) targets.push({ id: ext.id, version: ext.current_version });
+    for (const ext of updated) targets.push({ id: ext.id, version: ext.current_version });
+    if (targets.length > 0) {
+      trackReflectionInBackground(targets, 180);
     }
 
-    updateProgress('完了 - サイトを再読込中...', '');
     let msg = '';
     if (added.length > 0 && updated.length > 0) {
       msg = `✓ 新規${added.length}件を追加、${updated.length}件に新バージョンを追加しました!`;
     } else if (added.length > 0) {
-      msg = `✓ ${added.length}個の拡張機能を追加しました!`;
+      msg = `✓ ${added.length}個の拡張機能のアップロードが完了しました!`;
     } else if (updated.length > 0) {
       msg = `✓ ${updated.length}件に新バージョンを追加しました!`;
     } else {
@@ -2064,10 +2110,8 @@ async function submitAdd() {
     if (failed.length > 0) {
       msg += `\n\n失敗 ${failed.length}件:\n` + failed.map(f => `- ${f.file}: ${f.error}`).join('\n');
     }
-    msg += '\n\nOKを押すとサイトを再読込します。';
+    msg += '\n\n一覧の「反映中...」バッジが消えたらGitHub Pagesへの反映完了です。それまで少し時間がかかります。';
     alert(msg);
-    // キャッシュバスター付きでリロード
-    location.href = location.pathname + '?_=' + Date.now();
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -2508,12 +2552,15 @@ async function submitNewVersion(id) {
     ext.current_version = version;
     await saveJson(`Bump ${id} to v${version}`);
 
-    // 反映待ち
-    await waitForExtensionPublished([id], 120);
+    // ★ ここで一旦完了として扱う。反映はバックグラウンドで待つ。
+    hideProgress();
+    closeModal();
+    render();  // 楽観的に画面更新
 
-    updateProgress('完了 - サイトを再読込中...', `v${version}`);
-    alert(`✓ v${version} 追加完了!\nOKを押すとサイトを再読込します。`);
-    location.href = location.pathname + "?_=" + Date.now();
+    // バックグラウンドで反映を監視(非同期、awaitしない)
+    trackReflectionInBackground([{ id, version }], 180);
+
+    alert(`✓ v${version} のアップロードが完了しました!\n\nサイトへの反映はバックグラウンドで進行中です。\n一覧に「反映中...」バッジが表示されている間は、まだGitHub Pagesのビルド完了を待っている状態です。`);
   } catch (e) {
     hideProgress();
     alert('エラー: ' + e.message);
@@ -2634,6 +2681,51 @@ async function fetchPublishedJson() {
   } catch (e) {
     return null;
   }
+}
+
+// 指定ID+バージョンが反映待ちかチェック
+function isPendingReflection(id, version) {
+  return STATE.pendingReflection.has(`${id}|${version}`);
+}
+
+// 反映待ち登録(1件 or 複数)
+function markPending(ids) {
+  for (const key of ids) STATE.pendingReflection.add(key);
+}
+function unmarkPending(ids) {
+  for (const key of ids) STATE.pendingReflection.delete(key);
+}
+
+// バックグラウンドで、指定した id+version のペアが公開extensions.jsonに現れるまでpolling
+// 検出したら pendingReflection から削除して画面を更新
+async function trackReflectionInBackground(targets, timeoutSec = 180) {
+  // targets: [{id, version}, ...]
+  const keys = targets.map(t => `${t.id}|${t.version}`);
+  markPending(keys);
+  render();
+
+  const start = Date.now();
+  const deadline = start + timeoutSec * 1000;
+  while (Date.now() < deadline && STATE.pendingReflection.size > 0) {
+    const json = await fetchPublishedJson();
+    if (json && json.extensions) {
+      let changed = false;
+      for (const t of targets) {
+        const key = `${t.id}|${t.version}`;
+        if (!STATE.pendingReflection.has(key)) continue;
+        const ext = json.extensions.find(e => e.id === t.id);
+        if (ext && ext.current_version === t.version) {
+          STATE.pendingReflection.delete(key);
+          changed = true;
+        }
+      }
+      if (changed) render();
+    }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  // タイムアウトで残ったものは一応クリア(無限表示を避ける)
+  for (const key of keys) STATE.pendingReflection.delete(key);
+  render();
 }
 
 // 追加した拡張IDがpublicなextensions.jsonに含まれるまで待機
