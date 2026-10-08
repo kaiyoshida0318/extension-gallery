@@ -322,8 +322,15 @@
       "icon": "assets/icons/shop-image-dl.png",
       "author": "Kai",
       "permissions_summary": "activeTab, scripting, downloads",
-      "current_version": "1.1.0",
+      "current_version": "1.3.0",
       "versions": [
+        {
+          "version": "1.3.0",
+          "zip": "downloads/shop-image-dl-v1.3.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-08 15:22",
+          "notes": ""
+        },
         {
           "version": "1.1.0",
           "zip": "downloads/shop-image-dl-v1.1.0.zip",
