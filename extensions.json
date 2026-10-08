@@ -425,8 +425,15 @@
       "icon": "assets/icons/amazon-downloader.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "2.9.1",
+      "current_version": "2.9.2",
       "versions": [
+        {
+          "version": "2.9.2",
+          "zip": "downloads/amazon-downloader-v2.9.2.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-08 10:45",
+          "notes": ""
+        },
         {
           "version": "2.9.1",
           "zip": "downloads/amazon-downloader-v2.9.1.zip",
