@@ -241,8 +241,15 @@
       "icon": "assets/icons/rpp-downloader.png",
       "author": "Kai",
       "permissions_summary": "activeTab, scripting, tabs",
-      "current_version": "5.12.4",
+      "current_version": "5.12.7",
       "versions": [
+        {
+          "version": "5.12.7",
+          "zip": "downloads/rpp-downloader-v5.12.7.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-13 13:42",
+          "notes": ""
+        },
         {
           "version": "5.12.4",
           "zip": "downloads/rpp-downloader-v5.12.4.zip",
