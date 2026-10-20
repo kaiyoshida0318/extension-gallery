@@ -742,6 +742,27 @@
           "notes": "初回追加"
         }
       ]
+    },
+    {
+      "id": "RightEdgeFolders",
+      "name": "RightEdgeFolders",
+      "description": "(説明なし)",
+      "long_description": "(説明なし)",
+      "tags": [],
+      "icon": "",
+      "author": "Kai",
+      "permissions_summary": "",
+      "file_type": "app",
+      "current_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "zip": "downloads/RightEdgeFolders-v1.0.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-10-20 10:22",
+          "notes": "初回追加"
+        }
+      ]
     }
   ]
 }
