@@ -339,7 +339,7 @@
 
   .list-header {
     display: grid;
-    grid-template-columns: 56px 1fr 80px 140px 300px;
+    grid-template-columns: 36px 56px 1fr 80px 140px 300px;
     gap: 16px;
     padding: 12px 16px;
     background: var(--bg-soft);
@@ -353,7 +353,7 @@
 
   .row {
     display: grid;
-    grid-template-columns: 56px 1fr 80px 140px 300px;
+    grid-template-columns: 36px 56px 1fr 80px 140px 300px;
     gap: 16px;
     padding: 16px;
     border-bottom: 1px solid var(--border);
@@ -365,8 +365,20 @@
   /* 選択モード時は先頭にチェックボックス列を追加 */
   body.select-mode .list-header,
   body.select-mode .row {
-    grid-template-columns: 36px 56px 1fr 80px 140px 300px;
+    grid-template-columns: 36px 36px 56px 1fr 80px 140px 300px;
   }
+
+  /* 種別アイコン列 */
+  .row-type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: help;
+    user-select: none;
+  }
+  .row-type.type-extension { color: var(--accent); }
+  .row-type.type-app { color: #3b82f6; }
 
   .row:last-child { border-bottom: none; }
   .row:hover { background: var(--bg-soft); }
@@ -924,12 +936,17 @@
     .container { padding: 16px; }
     .list-header { display: none; }
     .row {
-      grid-template-columns: 48px 1fr;
+      grid-template-columns: 28px 48px 1fr;
       gap: 12px;
       padding: 14px;
     }
+    body.select-mode .row {
+      grid-template-columns: 32px 28px 48px 1fr;
+    }
+    .row-type { font-size: 16px; }
     .row-icon { width: 40px; height: 40px; }
-    .row-main { grid-column: 2; padding-right: 0; }
+    .row-main { grid-column: 3; padding-right: 0; }
+    body.select-mode .row-main { grid-column: 4; }
     .row-version, .row-updated, .row-actions {
       grid-column: 1 / -1;
       margin-top: 10px;
@@ -944,7 +961,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.8.0</span>
+  <span class="version-badge">v1.8.1</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -976,6 +993,7 @@
 
   <div class="list">
     <div class="list-header" id="list-header">
+      <div title="種別"></div>
       <div></div>
       <div>
         <span class="sortable" data-sort-col="name">名称 / 説明 <span class="sort-arrow"></span></span>
@@ -1557,6 +1575,10 @@ function renderList() {
     const isPending = isPendingReflection(ext.id, cur.version);
     const pendingBadge = isPending ? '<div class="reflection-badge">反映中...</div>' : '';
 
+    const extType = getExtType(ext);
+    const typeIcon = extType === 'app' ? '💻' : '🧩';
+    const typeLabel = extType === 'app' ? 'アプリ' : '拡張機能';
+
     return `
       <div class="row${selected ? ' selected' : ''}${isPending ? ' pending-row' : ''}" data-id="${esc(ext.id)}" onclick="onRowClick('${esc(ext.id)}')">
         ${STATE.selectMode ? `
@@ -1564,6 +1586,7 @@ function renderList() {
             <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${esc(ext.id)}')">
           </div>
         ` : ''}
+        <div class="row-type type-${extType}" title="${typeLabel}" onclick="event.stopPropagation()">${typeIcon}</div>
         <div class="row-icon">
           ${ext.icon ? `<img src="${esc(ext.icon)}?v=${esc(cur.version)}" alt="" onerror="this.parentElement.textContent='🧩'">` : '🧩'}
         </div>
