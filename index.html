@@ -961,7 +961,7 @@
 <div class="topbar">
   <img src="logo-header.png" alt="Extension Gallery" class="logo-img"
        onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-fallback',innerHTML:'🧩 Extension <span>Gallery</span>'}))">
-  <span class="version-badge">v1.8.1</span>
+  <span class="version-badge">v1.8.2</span>
   <div class="topbar-right">
     <div class="admin-actions" id="admin-actions">
       <button class="admin-btn" id="select-mode-btn">☑️ 選択</button>
@@ -2045,11 +2045,12 @@ async function submitAdd() {
           if (cmpVersionStr(version, targetExt.current_version) > 0) {
             targetExt.current_version = version;
             // 最新バージョンのアイコン/情報を反映
+            // バージョン含みのパスにする(CDNキャッシュ回避のため)
             if (parsed.iconBlob && parsed.iconExt) {
-              const iconPath = `assets/icons/${baseId}.${parsed.iconExt}`;
+              const iconPath = `assets/icons/${baseId}-v${version}.${parsed.iconExt}`;
               updateProgress(`${prefix}アイコン更新中`, iconPath);
               const iconBase64 = await blobToBase64(parsed.iconBlob);
-              await GH.putFileSafe(iconPath, iconBase64, `Update icon for ${baseId}`);
+              await GH.putFileSafe(iconPath, iconBase64, `Update icon for ${baseId} v${version}`);
               targetExt.icon = iconPath;
             }
             if (parsed.name) targetExt.name = parsed.name;
@@ -2065,10 +2066,10 @@ async function submitAdd() {
 
           let iconPath = '';
           if (parsed.iconBlob && parsed.iconExt) {
-            iconPath = `assets/icons/${baseId}.${parsed.iconExt}`;
+            iconPath = `assets/icons/${baseId}-v${version}.${parsed.iconExt}`;
             updateProgress(`${prefix}アイコンアップロード中`, iconPath);
             const iconBase64 = await blobToBase64(parsed.iconBlob);
-            await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${baseId}`);
+            await GH.putFileSafe(iconPath, iconBase64, `Add icon for ${baseId} v${version}`);
           }
 
           const newExt = {
@@ -2546,22 +2547,17 @@ async function submitNewVersion(id) {
     const filePath = `downloads/${id}-v${version}.${fileExt}`;
     await uploadFile(filePath, upFile, `Add ${id} v${version}`);
 
-    // 新しいアイコンが取れていれば、それも上書きアップロード
+    // 新しいアイコンが取れていれば、バージョン含みパスでアップロード
+    // (CDNキャッシュで古い画像が返される問題の回避)
     let iconPath = ext.icon || '';
     if (parsed.iconBlob && parsed.iconExt) {
-      const newIconPath = `assets/icons/${id}.${parsed.iconExt}`;
+      const newIconPath = `assets/icons/${id}-v${version}.${parsed.iconExt}`;
       updateProgress('アイコンを更新中', newIconPath);
       const iconBase64 = await blobToBase64(parsed.iconBlob);
       await GH.putFileSafe(newIconPath, iconBase64, `Update icon for ${id} v${version}`);
-
-      // 旧アイコンが別拡張子だったら削除
-      if (ext.icon && ext.icon !== newIconPath) {
-        try {
-          await GH.deleteFileSafe(ext.icon, `Delete old icon for ${id}`);
-        } catch (e) { console.warn('旧アイコン削除失敗(続行):', e.message); }
-      }
       iconPath = newIconPath;
       ext.icon = newIconPath;
+      // 旧アイコンファイルは放置(ディスク消費は僅かで、古い版の表示用にも使える)
     }
 
     updateProgress('extensions.jsonを更新中', '');
