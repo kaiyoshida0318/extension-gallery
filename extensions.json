@@ -819,12 +819,19 @@
       "description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
       "long_description": "Yahoo!ショッピング(ストアクリエイターPro / コマースアドマネージャー)の各種レポートを日別で一括ダウンロード",
       "tags": [],
-      "icon": "assets/icons/yahoo-downloader-KAIRY.png",
+      "icon": "assets/icons/yahoo-downloader-KAIRY-v2.2.0.png",
       "author": "Kai",
       "permissions_summary": "scripting, tabs, storage",
       "file_type": "extension",
-      "current_version": "2.1.2",
+      "current_version": "2.2.0",
       "versions": [
+        {
+          "version": "2.2.0",
+          "zip": "downloads/yahoo-downloader-KAIRY-v2.2.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-11-24 11:30",
+          "notes": ""
+        },
         {
           "version": "2.1.2",
           "zip": "downloads/yahoo-downloader-KAIRY-v2.1.2.zip",
