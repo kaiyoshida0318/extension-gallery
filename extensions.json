@@ -408,11 +408,18 @@
       "description": "(説明なし)",
       "long_description": "(説明なし)",
       "tags": [],
-      "icon": "assets/icons/amazon-monthly-downloader.png",
+      "icon": "assets/icons/amazon-monthly-downloader-v2.12.0.png",
       "author": "Kai",
       "permissions_summary": "",
-      "current_version": "2.11.0",
+      "current_version": "2.12.0",
       "versions": [
+        {
+          "version": "2.12.0",
+          "zip": "downloads/amazon-monthly-downloader-v2.12.0.zip",
+          "file_ext": "zip",
+          "updated_at": "2026-11-27 13:59",
+          "notes": ""
+        },
         {
           "version": "2.11.0",
           "zip": "downloads/amazon-monthly-downloader-v2.11.0.zip",
